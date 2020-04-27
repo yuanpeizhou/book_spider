@@ -27,5 +27,3 @@ Route::get('/ocr',function() {
 });
 
 
-// Route::get('/book',);
-
