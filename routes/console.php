@@ -16,3 +16,10 @@ use Illuminate\Foundation\Inspiring;
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->describe('Display an inspiring quote');
+
+
+Artisan::command('img {tag}', function ($tag) {
+    $word = New \App\Http\Controllers\Api\WordController();
+    $word->handle($tag);
+    // $this->info("Building {$tag}!");
+})->describe('find end');
