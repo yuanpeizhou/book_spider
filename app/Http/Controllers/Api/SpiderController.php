@@ -4,22 +4,21 @@ namespace App\Http\Controllers\Api;
 class SpiderController
 {   
 
-    public function __construct()
+    public function __construct($url,$file_name)
     {
         $this->model = New \App\Models\WordModel();
         $this->common = New \App\Lib\Common();
         $this->website = 'https://www.diyibanzhu4.pro';
-        // $this->type = 2;
-        // $this->number = 2823;
-        $this->url = 'https://www.diyibanzhu4.pro/2/2823'; //小说目录页面，省略了/
+        $this->url = $url; //小说目录页面，省略了/
         $this->chapterList = [];
         $this->chapterLastPage = 1;
         $this->pageLastPage = 1;
-        // $this
+        $this->file_name = $file_name;
     }
 
     /**/
     public function handleBook(){
+        echo "开始爬取书籍,爬取网址为：".$this->url."\r\n";
         /*获取书籍首页数据*/
         $bookUrl = $this->url.'/';
         $bookHome = $this->getPageData($bookUrl);
@@ -40,34 +39,72 @@ class SpiderController
                 $this->chapterList = array_merge($this->chapterList,$page);
             }
         }
-
+        echo "书籍章节扫描完毕\r\n";
 
         $this->handleChapter();
 
+        echo "书籍爬取完毕\r\n"; 
     }
 
     /**/
     public function handleChapter(){
         foreach ($this->chapterList as $key => $value) {
+            "开始爬取章节数据,章节路由：$value\r\n";
             /*获取第一页信息*/
             $url = $this->website . $value;
             $chapterData = $this->getPageData($url);
             $content = $this->getContent($chapterData);
 
+            /*获取章节名称*/
+            $title = $this->getPageTitle($chapterData);
+
             /*获取本章最后分页*/
             $this->getLastPage($content);
 
-            // /*循坏写入获取章节文本*/
-            // foreach ($variable as $key => $value) {
-            //     # code...
-            // }
+            echo "扫描章节分页完成：$this->pageLastPage\r\n";
+
+            /*循坏写入获取章节文本*/
+            $data = $this->handlePage($value);
+
+            $this->writeTxt($data);
+            
+            echo "成功写入".$value."章节数据\r\n";
         }
     }
 
-    public function handlePage(){
-        foreach ($this->pageLastPage as $key => $value) {
-            # code...
+    public function handlePage($chapter){
+        $chapterArray = \explode('.',$chapter);
+        $res = '';
+
+        for ($i=1; $i <= $this->pageLastPage; $i++) { 
+            $url = $this->website . $chapterArray[0] . '_' .$i . '.html';
+            $pageData = $this->getPageData($url);
+            $content = $this->getContent($pageData);
+            $txt = $this->getTxt($content);
+            $txt = str_replace('&nbsp;',"",$txt);
+            $txt = str_replace('<noscript>',"",$txt);
+            $txt = str_replace('</noscript>',"",$txt);
+            $txt = str_replace('<br />',"\r\n",$txt);
+            $txt = str_replace('<p>',"",$txt);
+            $txt = str_replace('</p>',"",$txt);
+            
+            $imgArray = $this->getImgList($txt);
+
+            foreach ($imgArray as $key => $value) {
+
+                $word = $this->handleWord($value);
+
+                if($word){
+                    $txt = str_replace($value,$word,$txt);
+                }else{
+                    $txt = str_replace($value,"",$txt);
+                }
+            }
+            $res = $res . $txt;
+            echo "成功爬取第".$i."页数据\r\n";
         }
+        echo $chapter."章节数据爬取完毕\r\n";
+        return $res;
     }
 
     /*获取页面信息*/
@@ -183,7 +220,6 @@ class SpiderController
     public function getLastPage($str){
         $regex ="/<a href=\"(.*?)\".*?>.*?<\/a>/i";
         if(preg_match_all($regex, $str, $matches)){
-            return isset($matches[1]) ? $matches[1] : '';;
             $last = array_pop($matches[1]);
             $pageArray = explode('_',$last);
             $pageArray2 = explode('.',$pageArray[1]);
@@ -236,7 +272,7 @@ class SpiderController
 
     /*写入文档*/
     public function writeTxt($data){
-        $path = base_path() . DIRECTORY_SEPARATOR . 'public' . DIRECTORY_SEPARATOR . 'test.txt';
+        $path = base_path() . DIRECTORY_SEPARATOR . 'public' . DIRECTORY_SEPARATOR . $this->file_name .'.txt';
         $file = fopen($path,'a');
         fwrite($file,$data);
         fclose($file);

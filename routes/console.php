@@ -23,3 +23,8 @@ Artisan::command('img {tag}', function ($tag) {
     $word->handle($tag);
     // $this->info("Building {$tag}!");
 })->describe('find end');
+
+Artisan::command('book {url} {file_name}', function ($url,$file_name) {
+    $book = New \App\Http\Controllers\Api\SpiderController($url,$file_name);
+    $book->handleBook();
+})->describe('spider book');
