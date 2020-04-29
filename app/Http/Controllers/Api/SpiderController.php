@@ -4,23 +4,28 @@ namespace App\Http\Controllers\Api;
 class SpiderController
 {   
 
-    public function __construct($url,$file_name)
-    {
+    public function __construct($book_name = null , $book_url = null)
+    {   
         $this->model = New \App\Models\WordModel();
+        $this->bookModel = New \App\Models\BookModel();
+        $this->chapterModel = New \App\Models\ChapterModel();
         $this->common = New \App\Lib\Common();
         $this->website = 'https://www.diyibanzhu4.pro';
-        $this->url = $url; //小说目录页面，省略了/
+        $this->book_url = $book_url; //小说目录页面，省略了/
+        $this->book_name = $book_name;
         $this->chapterList = [];
         $this->chapterLastPage = 1;
         $this->pageLastPage = 1;
-        $this->file_name = $file_name;
+        $this->book = null;
+        
     }
 
     /**/
     public function handleBook(){
-        echo "开始爬取书籍,爬取网址为：".$this->url."\r\n";
+        echo "开始爬取<<$this->book_name>>,扫描书籍信息"."\r\n";
+
         /*获取书籍首页数据*/
-        $bookUrl = $this->url.'/';
+        $bookUrl = $this->book_url.'/';
         $bookHome = $this->getPageData($bookUrl);
 
         /*获取首页章节信息*/
@@ -33,13 +38,46 @@ class SpiderController
         /*循环获取剩余页面*/
         if($this->chapterLastPage > 1){
             for ($i=2 ; $i <= $this->chapterLastPage ; $i++) { 
-                $chapterUrl = $this->url . '_' . $i . '/';
+                echo "扫描".$i."页章节信息\r\n";
+                $chapterUrl = $this->book_url . '_' . $i . '/';
                 $bookInfo = $this->getPageData($chapterUrl);
                 $page = $this->getPageList($bookInfo);
                 $this->chapterList = array_merge($this->chapterList,$page);
             }
         }
-        echo "书籍章节扫描完毕\r\n";
+
+        /*检查该书籍是否已爬取过*/
+        $book = $this->bookModel->where('url',$this->book_url)->first();
+        $chapterNum = count($this->chapterList);
+
+        if($book){
+            if($chapterNum > $book->chapter_num){
+                $book->chapter_num = $chapterNum;
+                $book->save();
+            }else if ($chapterNum == $book->chapter_num && $book->chapter_num == $book->current_page){
+                echo "已经是最新章节，无须更新";die;
+            }
+            $this->book = $book;
+            $updateNum = $chapterNum - $this->book->current_page;
+            echo "书籍信息扫描完毕,为已入库书籍,需更新".$updateNum."章";
+        }else{
+            $bookData = [
+                'website_id' => 1,
+                'book_name' => $this->book_name,
+                'url' => $this->book_url,
+                'chapter_num' => count($this->chapterList)
+            ];
+    
+            $this->bookModel->fill($bookData);
+            $this->bookModel->save();
+            $this->book = $this->bookModel;
+            echo "书籍信息扫描完毕,已成功入库,共计".$this->book->chapter_num."章\r\n";
+        }
+
+
+        
+        echo "    \r\n";
+        echo "开始爬取书籍章节信息\r\n";
 
         $this->handleChapter();
 
@@ -48,15 +86,21 @@ class SpiderController
 
     /**/
     public function handleChapter(){
-        foreach ($this->chapterList as $key => $value) {
-            "开始爬取章节数据,章节路由：$value\r\n";
+        $totalNum = $this->book->chapter_num - $this->book->current_page;
+        for ($i= ($this->book->current_page ? $this->book->current_page : 0); $i < $this->book->chapter_num; $i++) { 
+            $nowNum = $i + 1;
+            
+            $value = isset($this->chapterList[$i]) ? $this->chapterList[$i] : dd($i);
+
+            echo "开始爬取". $value ."章节数据,进度：" . $nowNum ."/". $totalNum ."\r\n";
+
             /*获取第一页信息*/
             $url = $this->website . $value;
             $chapterData = $this->getPageData($url);
             $content = $this->getContent($chapterData);
 
-            /*获取章节名称*/
-            $title = $this->getPageTitle($chapterData);
+            // /*获取章节名称*/
+            // $title = $this->getPageTitle($chapterData);
 
             /*获取本章最后分页*/
             $this->getLastPage($content);
@@ -66,10 +110,29 @@ class SpiderController
             /*循坏写入获取章节文本*/
             $data = $this->handlePage($value);
 
-            $this->writeTxt($data);
-            
-            echo "成功写入".$value."章节数据\r\n";
+            $chapterData = [
+                'book_id' => $this->book->id,
+                'url' => $value,
+                'chapter_order' => $nowNum,
+                'content' => $data
+            ];
+            $chapterModel = $this->getChapterModel();
+            $chapterModel->fill($chapterData);
+            $res = $chapterModel->save();
+            $this->book->current_page++;
+            $this->book->save();
+
+            if($res){
+                echo $value."章节数据成功入库\r\n";
+            }else{
+                echo $value."章节数据入库失败\r\n";
+            }
+
         }
+    }
+
+    public function getChapterModel(){
+        return New \App\Models\ChapterModel();
     }
 
     public function handlePage($chapter){
@@ -115,48 +178,19 @@ class SpiderController
     }
 
     public function test(){
-        $this->handleBook();
-        // $this->getTestData();
-        // $url = $this->url.'/';
 
-        // $res = $this->common->getData($url,false);
-
-        // $str = mb_convert_encoding($res, 'utf-8', 'gb2312');
-        // dd($str);
-        // $str = $this->getPageList($str);
-        // dd($str);
-
-        // $title = $this->getPageTitle($str);
-
-        // $str = $this->getContent($str);
-        // $txt = $this->getTxt($str);
-        // $page = $this->getPage($str);
-        
-        // if(preg_match_all($regexContent, $res, $matches)){ 
-        //     $res = str_replace('&nbsp;',"",$matches[0][0]);
-        //     $res = str_replace('<noscript>',"",$res);
-        //     $res = str_replace('</noscript>',"",$res);
-        //     $res = str_replace('<br />',"\r\n",$res);
-        //     $res = str_replace('<p>',"",$res);
-        //     $res = str_replace('</p>',"",$res);
-            
-        //     foreach ($resImg[0] as $key => $value) {
-
-        //         $word = $this->handleWord($value);
-
-        //         if($word){
-        //             $res = str_replace($value,$word,$res);
-        //         }else{
-        //             $res = str_replace($value,"",$res);
-        //         }
-                
-        //     }
-        //     $this->writeTxt($res);
-        // }else{ 
-        //     dd('没匹配到');
-        // }
-        
-
+        $id = request()->id;
+        $chapterModel = $this->getChapterModel();
+        $book = $this->bookModel->find($id);
+        $this->book_name = $book->book_name;
+        $path = base_path() . DIRECTORY_SEPARATOR . 'public' . DIRECTORY_SEPARATOR . $this->book_name .'.txt';
+        if(!file_exists($path)){
+            $data = $chapterModel->where('book_id',$id)->orderBy('chapter_order')->get();
+            foreach ($data as $key => $value) {
+                $this->writeTxt($value->content);
+            }
+        }
+        return response()->download($path);
     }
 
     /*获取书籍最后的分页*/
@@ -235,7 +269,7 @@ class SpiderController
         if(preg_match_all($regexImg,$str,$matches)){
             return $matches[0];
         }else{
-            return '';
+            return [];
         }
     }
 
@@ -272,7 +306,7 @@ class SpiderController
 
     /*写入文档*/
     public function writeTxt($data){
-        $path = base_path() . DIRECTORY_SEPARATOR . 'public' . DIRECTORY_SEPARATOR . $this->file_name .'.txt';
+        $path = base_path() . DIRECTORY_SEPARATOR . 'public' . DIRECTORY_SEPARATOR . $this->book_name .'.txt';
         $file = fopen($path,'a');
         fwrite($file,$data);
         fclose($file);

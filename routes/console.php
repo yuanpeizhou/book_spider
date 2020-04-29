@@ -24,7 +24,7 @@ Artisan::command('img {tag}', function ($tag) {
     // $this->info("Building {$tag}!");
 })->describe('find end');
 
-Artisan::command('book {url} {file_name}', function ($url,$file_name) {
-    $book = New \App\Http\Controllers\Api\SpiderController($url,$file_name);
+Artisan::command('book {file_name} {url}', function ($file_name,$url) {
+    $book = New \App\Http\Controllers\Api\SpiderController($file_name,$url);
     $book->handleBook();
 })->describe('spider book');
