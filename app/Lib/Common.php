@@ -25,12 +25,12 @@ class Common
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
 
         // 设置iP和useragent
-        curl_setopt($curl, CURLOPT_REFERER, $url);
-        curl_setopt($curl, CURLOPT_USERAGENT, array_rand($useragent));
+        // curl_setopt($curl, CURLOPT_REFERER, $url);
+        curl_setopt($curl, CURLOPT_USERAGENT, "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36");
 
         //添加这两行
-        curl_setopt($curl, CURLOPT_ENCODING, "gzip"); 
-        curl_setopt($curl, CURLOPT_HTTPHEADER, ["Origin: $url"]);
+        // curl_setopt($curl, CURLOPT_ENCODING, "gzip"); 
+        // curl_setopt($curl, CURLOPT_HTTPHEADER, ["Origin: $url"]);
         curl_setopt($curl,CURLOPT_COOKIE,'__cfduid=d3c098b882ff2c56691bf1de98945b02b1587967724; UM_distinctid=171ba40e4a2207-0bf41e6060352f-3a365305-1fa400-171ba40e4a35da; PHPSESSID=n412grk6ft6n6uqt16ehrv5q56; CNZZDATA1277837046=381221682-1587964842-https%253A%252F%252Fwww.diyibanzhu4.pro%252F%7C1588133615; CNZZDATA1275907010=1454170211-1587963096-null%7C1588146717');
 
         $rawData = curl_exec($curl);
