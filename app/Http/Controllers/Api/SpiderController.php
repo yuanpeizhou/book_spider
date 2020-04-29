@@ -27,7 +27,7 @@ class SpiderController
         /*获取书籍首页数据*/
         $bookUrl = $this->book_url.'/';
         $bookHome = $this->getPageData($bookUrl);
-        dd($bookHome);
+        // dd($bookHome);
 
         /*获取首页章节信息*/
         $page = $this->getPageList($bookHome);
