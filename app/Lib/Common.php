@@ -19,6 +19,9 @@ class Common
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
 
         $rawData = curl_exec($curl);
+        if (curl_errno($curl)) {
+            echo 'Curl error: ' . curl_error($curl);
+        }
         curl_close($curl);
 
         if($decode){
