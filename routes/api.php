@@ -19,6 +19,8 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 Route::namespace('Api')->group(function () {
     Route::get('/book', 'SpiderController@test');
 
+    Route::get('/book/sacn', 'BookScanController@scan');
+
     Route::get('/img/handle', 'WordController@handle');
 });
 

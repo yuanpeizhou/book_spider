@@ -28,3 +28,8 @@ Artisan::command('book {file_name} {url}', function ($file_name,$url) {
     $book = New \App\Http\Controllers\Api\SpiderController($file_name,$url);
     $book->handleBook();
 })->describe('spider book');
+
+Artisan::command('bookscan  {file_name} {url}', function ($file_name,$url) {
+    $book = New \App\Http\Controllers\Api\BookScanController($file_name,$url);
+    $book->scan();
+})->describe('scan book');

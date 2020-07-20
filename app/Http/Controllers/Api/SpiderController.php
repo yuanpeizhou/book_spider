@@ -10,7 +10,7 @@ class SpiderController
         $this->bookModel = New \App\Models\BookModel();
         $this->chapterModel = New \App\Models\ChapterModel();
         $this->common = New \App\Lib\Common();
-        $this->website = 'https://www.diyibanzhu4.pro';
+        $this->website = 'https://www.diyibanzhu5.pro';
         $this->book_url = $book_url; //小说目录页面，省略了/
         $this->book_name = $book_name;
         $this->chapterList = [];
@@ -98,6 +98,7 @@ class SpiderController
             /*获取第一页信息*/
             $url = $this->website . $value;
             $chapterData = $this->getPageData($url);
+
             $content = $this->getContent($chapterData);
 
             // /*获取章节名称*/
@@ -151,19 +152,21 @@ class SpiderController
             $txt = str_replace('<br />',"\r\n",$txt);
             $txt = str_replace('<p>',"",$txt);
             $txt = str_replace('</p>',"",$txt);
-            
+
             $imgArray = $this->getImgList($txt);
 
+            var_dump($imgArray);exit;
+            
             foreach ($imgArray as $key => $value) {
 
                 $word = $this->handleWord($value);
-
                 if($word){
                     $txt = str_replace($value,$word,$txt);
                 }else{
-                    $txt = str_replace($value,"",$txt);
+                    $txt = str_replace($value,"(未查询到字典)",$txt);
                 }
             }
+
             $res = $res . $txt;
             echo "成功爬取第".$i."页数据\r\n";
         }
@@ -233,7 +236,7 @@ class SpiderController
 
     /*获取页面内容*/
     public function getContent($str){
-        $regexContent="/<div class=\"page-content font-large\".*?>.*?<\/div>/ism"; 
+        $regexContent="/<div class=\"page-content font-large\".*?>.*?<\/center>/ism"; 
         if(preg_match_all($regexContent, $str, $matches)){
             return $matches[0][0];
         }else{
@@ -266,7 +269,7 @@ class SpiderController
 
     /*获取文本中的图片列表*/
     public function getImgList($str){
-        $regexImg = "/<img.*?>/i";
+        $regexImg = "/<img src.*?>/i";
         if(preg_match_all($regexImg,$str,$matches)){
             return $matches[0];
         }else{
@@ -287,15 +290,27 @@ class SpiderController
 
     /*图片转化文字*/
     public function handleWord($img){
-
-        if(strlen($img) > 40){
+        
+        if(strlen($img) > 200){
             return false;
         }
         $wordModel = New \App\Models\WordModel();
         $exg = preg_match('/<img.+src=\"?(.+\.(jpg|gif|bmp|bnp|png))\"?.+>/i',$img,$match);
-
+        // if(!isset($match[1])){
+        //     return false;
+        // }
         $srcArray = explode("/",$match[1]);
         $fileName = array_pop($srcArray);
+
+        if(strlen($fileName) > 8){
+            $fileName = substr($fileName,0,1).preg_replace("/[a-zA-Z.]/",'',$fileName).'.png';
+            
+            // $fileName = str_replace('u','',$fileName);
+            // $fileName = str_replace('v','',$fileName);
+            // $fileName = str_replace('iloveu','',$fileName);
+            
+        }
+        
         $result = $wordModel->where('tag',$fileName)->first();
 
         if($result){
@@ -313,3 +328,5 @@ class SpiderController
         fclose($file);
     }
 }
+
+

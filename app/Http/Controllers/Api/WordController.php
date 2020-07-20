@@ -49,46 +49,6 @@ class WordController
 
         echo "检索完成\r\n";
     }
-    // /*循环处理图片*/
-    // public function handle(){
-    //     // return $this->saveImg('123');
-    //     $website = request()->website ? request()->website : 'https://www.diyibanzhu4.pro/toimg/data';
-    //     $letterList = $this->getLetter();
-    //     echo "检索开始\r\n";
-    //     foreach ($letterList as $key => $value) {
-    //         echo '开始检索'.$value."目录\r\n";
-    //         for ($i=1; $i < 400; $i++) { 
-    //             $file_name = $value.$i.'.png';
-    //             echo '获取'.$file_name.'资源   ';
-    //             $file = $this->common->getData($website.'/'.$file_name,false);
-    //             if($this->checkRes($file)){
-    //                 $path =$this->saveImg($file_name,$file);
-
-    //                 $res = $this->model->where('tag',$file_name)->first();
-    //                 if(!$res){
-    //                     $data = [
-    //                         'url' => $website,
-    //                         'tag' => $file_name,
-    //                         'local_url' => $path,
-    //                         'created_at' => date("Y-m-d H:i:s",time())
-    //                     ];
-    //                     $res = $this->model->insert($data);
-    
-    //                     if($res){
-    //                         echo '录入'.$file_name."\r\n";
-    //                     }else{
-    //                         echo '录入'.$file_name."失败\r\n";
-    //                         exit;
-    //                     }
-    //                 }else{
-    //                     echo $file_name."已录入跳过\r\n";
-    //                 }
-    //             }else{
-    //                 echo $file_name."无效资源\r\n";
-    //             }
-    //         }
-    //     }
-    // }
 
     /*检查是否返回了图片*/
     public function checkRes($data){
