@@ -25,5 +25,3 @@ Route::get('/ocr',function() {
 
     dd($res);
 });
-
-

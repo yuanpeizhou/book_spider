@@ -18,9 +18,9 @@ Artisan::command('inspire', function () {
 })->describe('Display an inspiring quote');
 
 
-Artisan::command('img {tag}', function ($tag) {
+Artisan::command('imgHandle', function () {
     $word = New \App\Http\Controllers\Api\WordController();
-    $word->handle($tag);
+    $word->handle();
     // $this->info("Building {$tag}!");
 })->describe('find end');
 
@@ -33,3 +33,18 @@ Artisan::command('bookscan  {file_name} {url}', function ($file_name,$url) {
     $book = New \App\Http\Controllers\Api\BookScanController($file_name,$url);
     $book->scan();
 })->describe('scan book');
+
+Artisan::command('libscan', function () {
+    $lib = New \App\Http\Controllers\Api\LibScanController();
+    $lib->scan();
+})->describe('scan lib');
+
+Artisan::command('bookChapterScan', function () {
+    $book = New \App\Http\Controllers\Api\BookScanController();
+    $book->chapterNumScan();
+})->describe('bookChapterScan');
+
+Artisan::command('bookChapterHandle {start} {end}', function ($start , $end) {
+    $chapter = New \App\Http\Controllers\Api\ChapterScanController();
+    $chapter->scan($start,$end);
+})->describe('bookChapterScan');

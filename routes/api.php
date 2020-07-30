@@ -22,5 +22,13 @@ Route::namespace('Api')->group(function () {
     Route::get('/book/sacn', 'BookScanController@scan');
 
     Route::get('/img/handle', 'WordController@handle');
+
+    Route::get('/lib/sacn', 'LibScanController@scan');
+
+    Route::get('/lib/new', 'LibScanController@new');
+
+    Route::get('/book/chapterNumSacn', 'BookScanController@chapterNumScan');//章节链接扫描
+
+    Route::get('/book/handle', 'BookHandleController@handle');//处理源数据
 });
 
