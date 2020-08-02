@@ -72,7 +72,7 @@ class WordController extends CommonController
 
                 echo "第" . $i . "页第" . $key . "章数据处理完毕,$i/$this->chapter_page\r\n";
             }
-
+            
             $chapter_model = New \App\Models\ChapterModel();
             $res = $chapter_model->whereIn('id',$chapter_id_list)->update(['img_is_scan' => 1]);
 
@@ -94,8 +94,6 @@ class WordController extends CommonController
             // dd($data);
         }
         echo "该章节共计". count($content_list[0]) . "页\r\n";
-
-        
 
         foreach ($content_list[0] as $key => $value) {
             /**正则匹配整理图片资源 */
