@@ -24,6 +24,17 @@ Route::namespace('Api')->group(function () {
 
     Route::get('/book/list', 'BookController@bookList');
 
+    Route::get('/book/info', 'BookController@bookInfo');
+
+    Route::post('/book/handleBook', 'BookController@handleBook');
+
+    Route::post('/book/handleBook', 'BookController@handleBook');
+
+    Route::get('/book/export', 'BookController@bookExport');
+
+    Route::get('/word/list', 'WordAdminController@wordList');
+
+    Route::post('/word/update', 'WordAdminController@wordUpdate');
 
     Route::get('/book', 'SpiderController@test');
 

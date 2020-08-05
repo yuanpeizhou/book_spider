@@ -1,8 +1,9 @@
 <?php
 
 namespace App\Http\Controllers\Api;
+use App\Http\Controllers\Controller;
 
-class CommonController{
+class CommonController extends Controller{
 
     public function __construct()
     {
@@ -18,7 +19,7 @@ class CommonController{
             'msg' => $msg,
             'data' => $data
         ];
-        return json_encode($data);
+        return json_encode($data,JSON_UNESCAPED_UNICODE);
     }
 
     /**

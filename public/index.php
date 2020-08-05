@@ -3,13 +3,14 @@
 /**
  * 跨域
  */
+header("Access-Control-Allow-Origin: *");
+header('Access-Control-Allow-Headers: X-Requested-With,Content-Type,Authorization');
 @$http_origin = $_SERVER['HTTP_ORIGIN'];
-// if(
-//   $http_origin === 'http://localhost:3000' 
-// ){
-//   header("Access-Control-Allow-Origin: $http_origin");
-// }
-header("Access-Control-Allow-Origin: $http_origin");
+if(
+  $http_origin === 'http://localhost:4000' 
+){
+  header("Access-Control-Allow-Origin: $http_origin");
+}
 header('Vary: Origin');
 header('Access-Control-Allow-Credentials: true');
 header('Access-Control-Allow-Headers: X-Requested-With,Content-Type,Authorization');
