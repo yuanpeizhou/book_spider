@@ -28,7 +28,7 @@ Route::namespace('Api')->group(function () {
 
     Route::post('/book/handleBook', 'BookController@handleBook');
 
-    Route::post('/book/handleBook', 'BookController@handleBook');
+    Route::post('/book/handleChapter', 'BookController@handleChapter');
 
     Route::get('/book/export', 'BookController@bookExport');
 

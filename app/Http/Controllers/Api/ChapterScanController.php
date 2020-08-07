@@ -38,25 +38,29 @@ class ChapterScanController extends CommonController{
         $bookList = array_chunk($bookIdList,$this->bookSize);
 
         foreach ($bookList as $bookKey => $bookValue) {
-            $chapterListNum = $this->chapterModel->whereNull('source_content')->whereIn('book_id',$bookValue)->count();
+
+            $chapterListNum = $this->chapterModel->whereRaw("(source_content IS NULL OR source_content = '')")->whereIn('book_id',$bookValue)->count();
 
             if($chapterListNum == 0){
                 echo "未查找到章节信息,跳过\r\n\r\n";
                 continue;
             }
 
-            $chapterList = $this->chapterModel->whereNull('source_content')->whereIn('book_id',$bookValue)->get();
+            $chapterList = $this->chapterModel->whereRaw("(source_content IS NULL OR source_content = '')")->whereIn('book_id',$bookValue)->get();
 
             echo "分段爬取,统计该次爬取章节数,共计:". $chapterListNum ."章\r\n";
             foreach ($chapterList as $chapterKey => $chapterValue) {
                 
                 $content = $this->getChapterPageData($chapterValue->url);
-                $chapterValue->source_content = $content;
-                $chapterValue->save();
+                if($content){
+                    $chapterValue->source_content = $content;
+                    $chapterValue->is_spider = 1;
+                    $chapterValue->save();
 
-                $book = $this->bookModel->find($chapterValue->book_id);
-                $book->current_page = $book->current_page + 1;
-                $book->save();
+                    $book = $this->bookModel->find($chapterValue->book_id);
+                    $book->current_page = $book->current_page + 1;
+                    $book->save();
+                }
             }
             echo "分段爬取结束，休眠三秒钟后进行下次爬取\r\n\r\n";
             sleep(3);
