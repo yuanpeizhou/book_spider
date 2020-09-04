@@ -49,5 +49,7 @@ Route::namespace('Api')->group(function () {
     Route::get('/book/chapterNumSacn', 'BookScanController@chapterNumScan');//章节链接扫描
 
     Route::get('/book/handle', 'BookHandleController@handle');//处理源数据
+
+    Route::get('/chapter/spider', 'BookController@chapterSipder');//爬取章节内容
 });
 

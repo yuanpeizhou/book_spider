@@ -65,6 +65,83 @@ class BookController extends CommonController{
         return $this->returnApi(200,'ok',$res);
     }
 
+    /**
+     * 单章节爬取
+     */
+    public function chapterSipder(){
+        set_time_limit(0);
+
+        $id = request()->id;
+
+        if(!$id){
+            return $this->returnApi(201,'参数传递错误','');
+        }
+        $chapterModel = New \App\Models\ChapterModel();
+        $chapter = $chapterModel->find($id);
+
+        if(!$chapter){
+            return $this->returnApi(201,'参数传递错误','');
+        }
+
+        $source_content = $this->getChapterPageData($chapter->url);
+
+        if(!$source_content){
+            return $this->returnApi(202,'未爬取到数据','');
+        }
+
+        $chapter->source_content = $source_content;
+        $chapter->is_spider = 1;
+
+        $res = $chapter->save();
+
+        if(!$res){
+            return $this->returnApi(202,'保存失败','');
+        }
+
+
+        return $this->returnApi(200,'ok',$res);
+    }
+
+    public function getChapterPageData($chapterHomeUrl){
+        $lastPage = $this->handleChapterPageHome($chapterHomeUrl);
+        return $this->handleChapterPage($chapterHomeUrl,$lastPage);
+    }
+
+    /**处理章节第一页数据 */
+    public function handleChapterPageHome($url){
+        /*获取章节第一页信息*/
+        $url = $this->originUrl . $url;
+
+        $pageHomeData = $this->getPageData($url);
+
+        $content = $this->getContent($pageHomeData);
+
+        /*获取本章最后分页*/
+        $lastPage = $this->getChapterLastPage($content);
+
+        // echo "扫描章节分页完成,共"."$lastPage"."页：\r\n";
+
+        return $lastPage;
+    }
+
+    /**循环处理章节页面 */
+    public function handleChapterPage($chapterHomeUrl,$lastPage){
+
+        $chapterArray = explode('.',$chapterHomeUrl);
+        $res = '';
+        for ($i=1; $i <= $lastPage; $i++) { 
+            $chapterUrl = $this->originUrl . $chapterArray[0] . '_' .$i . '.html';
+            $pageData = $this->getPageData($chapterUrl);
+            $res = $res.$pageData;
+            // echo "第".$i."页数据爬取完成\r\n";
+        }
+        // echo "章节数据爬取完成\r\n\r\n";
+        return $res;
+    }
+
+    /**
+     * 书籍导出
+     */
     public function bookExport(){
 
         $id = request()->id;

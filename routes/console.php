@@ -22,7 +22,7 @@ Artisan::command('imgHandle', function () {
     $word = New \App\Http\Controllers\Api\WordController();
     $word->handle();
     // $this->info("Building {$tag}!");
-})->describe('find end');
+})->describe('扫描出图片资源');
 
 Artisan::command('book {file_name} {url}', function ($file_name,$url) {
     $book = New \App\Http\Controllers\Api\SpiderController($file_name,$url);

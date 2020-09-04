@@ -33,6 +33,8 @@ class WordController extends CommonController
     public function handle(){
         $condition[] = ['img_is_scan','=',0];
 
+        $condition[] = ['is_spider','=',1];
+
         if($this->book_start){
             $condition[] = ['book_id','>=',$this->book_start];
         }
@@ -57,32 +59,43 @@ class WordController extends CommonController
         for ($i=1; $i <= $this->chapter_page; $i++) { 
             echo "开始处理第". $i . "页章节\r\n";
 
-            request()->offsetSet('page',$i);
-            $chapter_list = $this->chapter_model->select('id','source_content')->where($condition)->orderBy('id')->simplePaginate($this->chapter_size);
+            // request()->offsetSet('page',1);
+            $id_list = $this->chapter_model->where('img_is_scan',0)->orderBy('id')->limit($this->chapter_size)->pluck('id');
+
+            $chapter_list = $this->chapter_model->select('id','source_content')->whereIn('id',$id_list)->where('is_spider',1)->orderBy('id')->simplePaginate($this->chapter_size);
+
 
             if(!$chapter_list){
-                continue;
+                echo "未查询到章节数据";continue;
             }
+
+
             $chapter_id_list = [];
             foreach ($chapter_list as $key => $value) {
                 echo "id：".$value->id."\r\n";
-                $this->handleImg($value->source_content);
-                
-                $chapter_id_list[] = $value->id;
+                $res = $this->handleImg($value->source_content);
+
+                if($res){
+                    $chapter_id_list[] = $value->id;
+                }
 
                 echo "第" . $i . "页第" . $key . "章数据处理完毕,$i/$this->chapter_page\r\n";
             }
             
             $chapter_model = New \App\Models\ChapterModel();
-            $res = $chapter_model->whereIn('id',$chapter_id_list)->update(['img_is_scan' => 1]);
 
-            if(!$res){
-                echo "插入失败\r\n\r\n";die;
+            if($chapter_id_list){
+                $res = $chapter_model->whereIn('id',$chapter_id_list)->update(['img_is_scan' => 1]);
+
+                if(!$res){
+                    echo "插入失败\r\n\r\n";die;
+                }
             }
+
             // var_dump($chapter_id_list);
             
-            echo "处理完成,休眠1秒钟\r\n\r\n";
-            sleep(2);
+            // echo "处理完成,休眠1秒钟\r\n\r\n";
+            // sleep(1);
         }
         echo "所有书籍扫描完毕\r\n";
     }
@@ -90,6 +103,7 @@ class WordController extends CommonController
     public function handleImg($data){
         $content_list = $this->getWordComntent($data,'complex');
         if(!$content_list){
+            return false;
             var_dump($content_list);exit;
             // dd($data);
         }
@@ -105,6 +119,7 @@ class WordController extends CommonController
             echo "第". $key . "页数据扫描完毕\r\n";
         }
         echo "章节数据扫描完毕\r\n\r\n";
+        return true;
     }
 
     public function regexImg($str){
@@ -138,7 +153,9 @@ class WordController extends CommonController
                 if($this->checkRes($img_data)){
                     $img_temp_array = explode('/',$img_url_array[$key]);
                     $fileName = array_pop($img_temp_array);
+                    echo "开始爬取图片:" . $fileName;
                     $temp['local_url'] = $this->saveImg($fileName,$img_data);
+                    echo "图片:" . $fileName . "爬取成功\r\n";
                 }else{
                     $temp['local_url'] = '未采集到该资源';
                 }

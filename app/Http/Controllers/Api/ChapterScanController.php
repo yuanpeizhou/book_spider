@@ -42,7 +42,7 @@ class ChapterScanController extends CommonController{
             $chapterListNum = $this->chapterModel->whereRaw("(source_content IS NULL OR source_content = '')")->whereIn('book_id',$bookValue)->count();
 
             if($chapterListNum == 0){
-                echo "未查找到章节信息,跳过\r\n\r\n";
+                // echo "未查找到章节信息,跳过\r\n\r\n";
                 continue;
             }
 

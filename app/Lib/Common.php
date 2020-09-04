@@ -9,36 +9,48 @@ class Common
     /*get请求*/
     public static function getData($url, $decode = true, $assoc = true, $ssl = false){
 
+        $url = 'http://www.cdbottle.com/';
 
-        // $useragent = array(
-        //     'Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.0)',
-        //     'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.2)',
-        //     'Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)',
-        //     'Mozilla/5.0 (Windows; U; Windows NT 5.2) Gecko/2008070208 Firefox/3.0.1',
-        //     'Opera/9.27 (Windows NT 5.2; U; zh-cn)',
-        //     'Opera/8.0 (Macintosh; PPC Mac OS X; U; en)',
-        //     'Mozilla/5.0 (Windows; U; Windows NT 5.2) AppleWebKit/525.13 (KHTML, like Gecko) Chrome/0.2.149.27 Safari/525.13 ',
-        //     'Mozilla/5.0 (Windows; U; Windows NT 5.2) AppleWebKit/525.13 (KHTML, like Gecko) Version/3.1 Safari/525.13'
-        // );
         $start_time = time();
 
         $curl = curl_init();
-        curl_setopt($curl, CURLOPT_URL, $url);
-        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, $ssl);
-        curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 0);
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($curl, CURLOPT_TIMEOUT, 120);
 
-        // 设置iP和useragent
-        // curl_setopt($curl, CURLOPT_REFERER, $url);
+        curl_setopt($curl, CURLOPT_PROXYAUTH, CURLAUTH_BASIC); //代理认证模式
+
+        curl_setopt($curl, CURLOPT_PROXY, "119.23.207.56"); //代理服务器地址  
+
+        curl_setopt($curl, CURLOPT_PROXYPORT,80); //代理服务器端口
+
+
+        
+        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($curl, CURLOPT_TIMEOUT, 300);
+
+        curl_setopt($curl, CURLOPT_URL, $url);
+
+        //useragent
         curl_setopt($curl, CURLOPT_USERAGENT, "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36");
+        
+        // /**随机ip */
+        // $cip = '123.125.68.'.mt_rand(0,254);
+        // $xip = '125.90.88.'.mt_rand(0,254);
+        // $header = array(
+        // 'CLIENT-IP:'.$cip,
+        // 'X-FORWARDED-FOR:'.$xip,
+        // );
+
+        // curl_setopt ($curl, CURLOPT_HTTPHEADER, $header);
 
         $rawData = curl_exec($curl);
 
         if (curl_errno($curl)) {
-            echo 'Curl error: ' . curl_error($curl);
+            echo 'Curl error: ' . curl_error($curl);exit;
+            // var_dump($rawData);exit;
         }
-
+        var_dump($rawData);exit;
         curl_close($curl);
         
         $end_time = time();
