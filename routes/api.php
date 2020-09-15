@@ -51,5 +51,7 @@ Route::namespace('Api')->group(function () {
     Route::get('/book/handle', 'BookHandleController@handle');//处理源数据
 
     Route::get('/chapter/spider', 'BookController@chapterSipder');//爬取章节内容
+
+    Route::get('/video/list', 'VideoController@videoList');
 });
 

@@ -9,17 +9,17 @@ class Common
     /*get请求*/
     public static function getData($url, $decode = true, $assoc = true, $ssl = false){
 
-        $url = 'http://www.cdbottle.com/';
+        // $url = 'http://www.cdbottle.com/';
 
         $start_time = time();
 
         $curl = curl_init();
 
-        curl_setopt($curl, CURLOPT_PROXYAUTH, CURLAUTH_BASIC); //代理认证模式
+        // curl_setopt($curl, CURLOPT_PROXYAUTH, CURLAUTH_BASIC); //代理认证模式
 
-        curl_setopt($curl, CURLOPT_PROXY, "119.23.207.56"); //代理服务器地址  
+        // curl_setopt($curl, CURLOPT_PROXY, "119.23.207.56"); //代理服务器地址  
 
-        curl_setopt($curl, CURLOPT_PROXYPORT,80); //代理服务器端口
+        // curl_setopt($curl, CURLOPT_PROXYPORT,80); //代理服务器端口
 
 
         
@@ -34,13 +34,13 @@ class Common
         //useragent
         curl_setopt($curl, CURLOPT_USERAGENT, "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36");
         
-        // /**随机ip */
-        // $cip = '123.125.68.'.mt_rand(0,254);
-        // $xip = '125.90.88.'.mt_rand(0,254);
-        // $header = array(
-        // 'CLIENT-IP:'.$cip,
-        // 'X-FORWARDED-FOR:'.$xip,
-        // );
+        /**随机ip */
+        $cip = '123.125.68.'.mt_rand(0,254);
+        $xip = '125.90.88.'.mt_rand(0,254);
+        $header = array(
+        'CLIENT-IP:'.$cip,
+        'X-FORWARDED-FOR:'.$xip,
+        );
 
         // curl_setopt ($curl, CURLOPT_HTTPHEADER, $header);
 
@@ -50,12 +50,12 @@ class Common
             echo 'Curl error: ' . curl_error($curl);exit;
             // var_dump($rawData);exit;
         }
-        var_dump($rawData);exit;
+        // var_dump($rawData);exit;
         curl_close($curl);
         
         $end_time = time();
 
-        echo "抓取时间:" . ($end_time - $start_time)."s\r\n";
+        // echo "抓取时间:" . ($end_time - $start_time)."s\r\n";
 
         Log::notice('抓取页面,网址:'.$url.',耗时'. ($end_time - $start_time) . '秒');
 

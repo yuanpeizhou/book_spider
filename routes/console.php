@@ -48,3 +48,8 @@ Artisan::command('bookChapterHandle {start} {end}', function ($start , $end) {
     $chapter = New \App\Http\Controllers\Api\ChapterScanController();
     $chapter->scan($start,$end);
 })->describe('bookChapterScan');
+
+Artisan::command('test', function () {
+    $chapter = New \App\Http\Controllers\Api\JwtController();
+    $chapter->index();
+})->describe('123');
