@@ -53,5 +53,7 @@ Route::namespace('Api')->group(function () {
     Route::get('/chapter/spider', 'BookController@chapterSipder');//爬取章节内容
 
     Route::get('/video/list', 'VideoController@videoList');
+
+    Route::get('/book/check', 'BookCheckController@checkBookComplex');
 });
 

@@ -53,3 +53,9 @@ Artisan::command('test', function () {
     $chapter = New \App\Http\Controllers\Api\JwtController();
     $chapter->index();
 })->describe('123');
+
+/**检查所有书籍爬取结果 */
+Artisan::command('bookCheck', function () {
+    $check = New \App\Http\Controllers\Api\BookCheckController();
+    $check->checkBookComplex();
+})->describe('检查所有书籍爬取结果');

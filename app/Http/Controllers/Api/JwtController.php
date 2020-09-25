@@ -10,7 +10,7 @@ class JwtController extends CommonController{
 
     public function index(){
         // $data = '{"user_id": "1213"}';
-        $data = array('uid' => '1213');
+        $data = array('uid' => '002800001');
         $secret = 'e826b503-0d9b-453a-8603-7b6acbc14fdc';
         $day = 7;
         $builder = (new Builder())

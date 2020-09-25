@@ -27,7 +27,7 @@ class Common
         curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
 
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($curl, CURLOPT_TIMEOUT, 300);
+        curl_setopt($curl, CURLOPT_TIMEOUT, 120);
 
         curl_setopt($curl, CURLOPT_URL, $url);
 
@@ -44,21 +44,22 @@ class Common
 
         // curl_setopt ($curl, CURLOPT_HTTPHEADER, $header);
 
-        $rawData = curl_exec($curl);
+        $rawData = @curl_exec($curl);
 
-        if (curl_errno($curl)) {
-            echo 'Curl error: ' . curl_error($curl);exit;
-            // var_dump($rawData);exit;
-        }
-        // var_dump($rawData);exit;
-        curl_close($curl);
-        
         $end_time = time();
 
-        // echo "抓取时间:" . ($end_time - $start_time)."s\r\n";
+        echo "抓取时间:" . ($end_time - $start_time)."s\r\n";
 
         Log::notice('抓取页面,网址:'.$url.',耗时'. ($end_time - $start_time) . '秒');
 
+        if (curl_errno($curl)) {
+            echo 'Curl error: ' . curl_error($curl);
+            curl_close($curl);
+            return false;
+        }
+
+        curl_close($curl);
+        
         if($decode){
             return json_decode($rawData, $assoc);
         }else{

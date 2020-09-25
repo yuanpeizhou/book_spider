@@ -277,16 +277,6 @@ class SpiderController
         }
     }
 
-    public function getTestData(){
-        $str = "<img src='/toimg/data/q22.png' />的古玲珑】月上三杆，彩虹城的迎归大会已经进入尾声，大多数人都已经离去，只剩下少许人在清理遗留下的现场，唯有陈林居士与古玲珑依旧留在这里<img src='/toimg/data/q22.png' />";
-        $regexImg = "/<img.*?>/i";
-        if(preg_match_all($regexImg,$str,$resImg)){
-            dd($resImg);
-        }else{
-            dd("没匹配到");
-        }
-    }
-
 
     /*图片转化文字*/
     public function handleWord($img){

@@ -216,5 +216,18 @@ class CommonController extends Controller{
             return '';
         }
     }
+
+    /*获取页面内容*/
+    public function getChapterContentFromDatabase($str){
+        // if(strpos($str,'502') !== false){
+        //     return false;
+        // }
+        $regexContent="/<div class=\"page-content font-large\".*?>.*?<\/div>/ism"; 
+        if(preg_match_all($regexContent, $str, $matches)){
+            return true;
+        }else{
+            return false;
+        }
+    }
 }
 
