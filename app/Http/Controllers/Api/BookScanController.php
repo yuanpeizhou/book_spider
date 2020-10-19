@@ -61,14 +61,6 @@ class BookScanController extends CommonController{
 
     }   
 
-    // public function insert(){
-
-    // }
-
-    // public function update(){
-
-    // }
-
     public function scan(){
         
     } 

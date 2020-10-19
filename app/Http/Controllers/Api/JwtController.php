@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 use Lcobucci\JWT\Builder;
+use Lcobucci\JWT\Parser;
 // use Lcobucci\JWT\Signer\Ecdsa\Sha256;
 use Lcobucci\JWT\Signer\Key;
 use Lcobucci\JWT\Signer\Hmac\Sha256;
@@ -19,8 +20,9 @@ class JwtController extends CommonController{
         ->withClaim("data",json_encode($data));
 
         $token = $builder->getToken(new Sha256(),new Key($secret));
+        var_dump((string)$token);exit;
 
         // return $token;\
-        echo $token;
+        // echo $token;
     }
 }

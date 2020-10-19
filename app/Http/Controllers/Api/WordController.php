@@ -15,6 +15,9 @@ class WordController extends CommonController
 
     protected $web_url;
 
+    protected $img_save_path;
+
+
     public function __construct()
     {
         $this->model = New \App\Models\WordModel();
@@ -25,11 +28,70 @@ class WordController extends CommonController
         $this->word_model = New \App\Models\WordModel();
         $web_model = New \App\Models\WebsiteModel();
         $this->web_url = $web_model->find(1)->url;
+
+        ini_set('memory_limit', '1024M');
     }
     // api/count/user,api/count/activity,api/count/reservation
 
+    /**
+     * 临时测试方法
+     */
+    public function md5(){
+        $word_list = $this->word_model->get();
+        foreach ($word_list as $key => $value) {
+            $md5 = $this->getFileMd5($value);
+            $value->md5 = $md5;
+            $value->save();
+        }
+        echo 'ok';
+        // for ($i=1817; $i <= 1817; $i++) { 
+        //     $first_word = $this->model->find($i);
 
-    /*根据标签处理*/
+        //     if($first_word->word){
+        //         $first_md5 = $this->getFileMd5($first_word);
+
+        //         $word_list = $this->model->whereRaw('word is null')->get();
+    
+        //         $temp = [];
+        
+        //         foreach ($word_list as $key => $value) {
+        
+        //             $file_md5 = $this->getFileMd5($value);
+        
+        //             if($file_md5 == $first_md5){
+        //                 $temp[] = $value->id;
+        //             }
+        //         }
+        
+        //         $res = $this->model->whereIn('id',$temp)->update(['word' => $first_word->word]);
+        //     }
+        // }
+
+        // if(!$res){
+        //     echo "error";
+        // }else{
+        //     echo "yes";
+        // }
+        // var_dump($temp);exit;
+    }
+
+    /**
+     * 获取文件md5码
+     */
+    function getFileMd5($local_url){
+        $md5 = null;
+
+        $path = base_path() . DIRECTORY_SEPARATOR . $local_url;
+
+        if(file_exists($path)){
+            $md5 = md5_file($path);
+        }
+        
+        return $md5;
+    }
+
+
+    /*扫描爬取图片并识别图片*/
     public function handle(){
         $condition[] = ['img_is_scan','=',0];
 
@@ -59,11 +121,14 @@ class WordController extends CommonController
         for ($i=1; $i <= $this->chapter_page; $i++) { 
             echo "开始处理第". $i . "页章节\r\n";
 
-            // request()->offsetSet('page',1);
+            
+
+
             $id_list = $this->chapter_model->where('img_is_scan',0)->orderBy('id')->limit($this->chapter_size)->pluck('id');
 
-            $chapter_list = $this->chapter_model->select('id','source_content')->whereIn('id',$id_list)->where('is_spider',1)->orderBy('id')->simplePaginate($this->chapter_size);
+            
 
+            $chapter_list = $this->chapter_model->select('id','source_content')->whereIn('id',$id_list)->where('is_spider',1)->orderBy('id')->simplePaginate($this->chapter_size);
 
             if(!$chapter_list){
                 echo "未查询到章节数据";continue;
@@ -86,40 +151,34 @@ class WordController extends CommonController
 
             if($chapter_id_list){
                 $res = $chapter_model->whereIn('id',$chapter_id_list)->update(['img_is_scan' => 1]);
-
-                if(!$res){
-                    echo "插入失败\r\n\r\n";die;
-                }
             }
-
-            // var_dump($chapter_id_list);
-            
-            // echo "处理完成,休眠1秒钟\r\n\r\n";
-            // sleep(1);
         }
         echo "所有书籍扫描完毕\r\n";
     }
 
     public function handleImg($data){
         $content_list = $this->getWordComntent($data,'complex');
-        if(!$content_list){
-            return false;
-            var_dump($content_list);exit;
-            // dd($data);
-        }
+
         echo "该章节共计". count($content_list[0]) . "页\r\n";
+
+        $res = true;
 
         foreach ($content_list[0] as $key => $value) {
             /**正则匹配整理图片资源 */
             $img_array = $this->regexImg($value);
 
+            if($img_array['is_all'] == false){
+                $res = false;
+            }
+
             /**图片资源入库 */
-            $res = $this->word_model->insert($img_array);
+            $wordModel = New \App\Models\WordModel();
+            $wordModel->insert($img_array['data']);
 
             echo "第". $key . "页数据扫描完毕\r\n";
         }
         echo "章节数据扫描完毕\r\n\r\n";
-        return true;
+        return $res;
     }
 
     public function regexImg($str){
@@ -132,45 +191,80 @@ class WordController extends CommonController
 
         $res = [];
 
+        $is_all_img = true;
+        /**循环处理图片 */
         foreach ($img_text_array as $key => $value) {
 
             $temp = [];
+            
 
             $img_temp_array = explode('/',$img_url_array[$key]);
             $fileName = array_pop($img_temp_array);
 
-            if(!in_array($value,$word_list) && !file_exists('public' . DIRECTORY_SEPARATOR . 'word' . DIRECTORY_SEPARATOR . $fileName)){
+            if(!in_array($value,$word_list)){
                 $temp['img_text'] = $value;
                 $temp['origin_url'] = $img_url_array[$key];
-
-                echo "开始抓取". $img_url_array[$key] ."\r\n";
-
-                /**抓取图片到本地 */
-                $img_data = $this->getPageData($this->web_url . $img_url_array[$key],false);
-
-                echo "成功抓取". $img_url_array[$key] ."\r\n\r\n";
-
-                if($this->checkRes($img_data)){
-                    $img_temp_array = explode('/',$img_url_array[$key]);
-                    $fileName = array_pop($img_temp_array);
-                    echo "开始爬取图片:" . $fileName;
-                    $temp['local_url'] = $this->saveImg($fileName,$img_data);
-                    echo "图片:" . $fileName . "爬取成功\r\n";
-                }else{
-                    $temp['local_url'] = '未采集到该资源';
-                }
-
+                $temp['word'] = null;
                 $temp['created_at'] = date("Y-m-d H:i:s",time());
 
+                $is_spider = false;
+                $savePath = base_path() . DIRECTORY_SEPARATOR . 'public' . DIRECTORY_SEPARATOR . 'word' . DIRECTORY_SEPARATOR . $fileName;
+
+                /**如果本地没有文件则抓取 */
+                if(!file_exists($savePath)){
+                    echo "开始抓取". $img_url_array[$key] ."\r\n";
+                    /**抓取图片到本地 */
+                    $img_data = $this->getPageData($this->web_url . $img_url_array[$key],false);
+                    echo "成功抓取". $img_url_array[$key] ."开始校验\r\n";
+
+                    if($this->checkRes($img_data)){
+                        $is_spider = true;
+                    }else{
+                        echo "校验失败,开始第二次爬取";
+                        /**抓取图片到本地 */
+                        $img_data = $this->getPageData($this->web_url . $img_url_array[$key],false);
+                        if($this->checkRes($img_data)){
+                            $is_spider = true;
+                        }else{
+                            echo "校验失败,跳过该资源爬取\r\n";
+                            $is_all_img= false;
+                        }
+                    }
+
+                    if($is_spider){
+                        echo "开始保存图片:" . $fileName."\r\n";
+                        $temp['local_url'] = $this->saveImg($fileName,$img_data);
+                    }
+                }else{
+                    $is_spider = true;
+                    $temp['local_url'] = 'public' . DIRECTORY_SEPARATOR . 'word' . DIRECTORY_SEPARATOR . $fileName;
+                }
+
+                /**
+                 * 查找到图片资源，对比md5值
+                 */
+                if($is_spider){
+                    $temp['md5'] = $this->getFileMd5($temp['local_url']);
+                    $file_word = $this->word_model->where('md5',$temp['md5'])->whereNotNull('word')->first();
+
+                    if($file_word){
+                        $this->word_model->where('md5',$temp['md5'])->whereNull('word')->update(['word' => $file_word->word]);
+                        echo "查询到图片对应文字:" . $file_word->word . "\r\n\r\n";
+                        $temp['word'] = $file_word->word;
+                    }
+                }
                 $res[] = $temp;
             }
         }
-        return $res;
+        return ['is_all' => $is_all_img , 'data' => $res];
     }
 
 
     /*检查是否返回了图片*/
     public function checkRes($data){
+        if(!$data){
+            return false;
+        }
         if(strpos($data,'<title>404</title>') === false){
             return true;
         }else{

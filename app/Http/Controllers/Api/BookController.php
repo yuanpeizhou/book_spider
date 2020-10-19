@@ -20,7 +20,7 @@ class BookController extends CommonController{
     }
 
     /**
-     * 获取书记列表
+     * 获取书籍列表
      */
     public function bookList(){
         $page = request()->page ? intval(request()->page) : 1;
@@ -171,6 +171,7 @@ class BookController extends CommonController{
 
     /*写入文档*/
     public function writeTxt($data,$path){
+        $path = iconv("UTF-8","GBK//IGNORE",$path);
         $file = fopen($path,'a');
         fwrite($file,$data);
         fclose($file);

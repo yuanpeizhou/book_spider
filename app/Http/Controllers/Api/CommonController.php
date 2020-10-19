@@ -29,9 +29,17 @@ class CommonController extends Controller{
     public function getPageData($url,$encode = true){
         $lib = New \App\Lib\Common();
         $res = $lib->getData($url,false);
-        if($encode){
+
+        $code = mb_detect_encoding($res, array('GB2312','UTF-8', 'GBK'));
+
+        if($code == 'EUC-CN' || $code == 'CP936'){
             $res = mb_convert_encoding($res, 'utf-8', 'gbk');
         }
+        
+        /**废弃 */
+        // if($encode && $this->utf8_gb2312($res) == 'gb2312'){
+        //     $res = mb_convert_encoding($res, 'utf-8', 'gbk');
+        // }
         return $res;
     }
 
@@ -197,10 +205,6 @@ class CommonController extends Controller{
     public function getLibLastPage($str){
         $regex ="/<a class=\"endPage\" href=\"(.*?)\".*?>.*?<\/a>/i";
         if(preg_match_all($regex, $str, $matches)){
-            // $pageArray = explode('/',$matches[1][0]);
-            // $pageArray2 = explode('_',$pageArray[2]);
-
-            // return $pageArray2[1];
 
             $array = explode('.',$matches[1][0]);
 
@@ -228,6 +232,42 @@ class CommonController extends Controller{
         }else{
             return false;
         }
+    }
+
+    /**
+     * 判断字符串是utf-8 还是gb2312
+     * @param unknown $str
+     * @param string $default
+     * @return string
+     */
+    public function utf8_gb2312($str, $default = 'gb2312')
+    {
+        $str = preg_replace("/[\x01-\x7F]+/", "", $str);
+
+        if (empty($str)) return $default;
+        
+        $preg = array(
+            "gb2312" => "/^([\xA1-\xF7][\xA0-\xFE])+$/", //正则判断是否是gb2312
+            "utf-8" => "/^[\x{4E00}-\x{9FA5}]+$/u",   //正则判断是否是汉字(utf8编码的条件了)，这个范围实际上已经包含了繁体中文字了
+        );
+        
+        if ($default == 'gb2312') {
+            $option = 'utf-8';
+        } else {
+            $option = 'gb2312';
+        }
+        
+        if (!preg_match($preg[$default], $str)) {
+            return $option;
+        }
+        $str = @iconv($default, $option, $str);
+        
+        //不能转成 $option, 说明原来的不是 $default
+        if (empty($str)) {
+            return $option;
+        }
+
+        return $default;
     }
 }
 

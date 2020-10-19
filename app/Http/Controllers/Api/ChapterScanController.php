@@ -3,6 +3,9 @@
 namespace App\Http\Controllers\Api;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * 章节数据爬取
+ */
 class ChapterScanController extends CommonController{
 
     protected $bookModel;
@@ -22,6 +25,7 @@ class ChapterScanController extends CommonController{
         $this->chapterModel = New \App\Models\ChapterModel();
 
         $this->webUrl = $this->webModel->find(1)->url;
+        ini_set('memory_limit', '1024M');
     }
 
     public function scan($start = null,$end = null){
@@ -55,8 +59,8 @@ class ChapterScanController extends CommonController{
 
             echo "分段爬取,统计该次爬取章节数,共计:". $chapterListNum ."章\r\n";
             foreach ($chapterList as $chapterKey => $chapterValue) {
-                
                 $content = $this->getChapterPageData($chapterValue);
+
                 $is_check = $this->getChapterContentFromDatabase($content);
 
                 $is_write = false;
@@ -73,9 +77,11 @@ class ChapterScanController extends CommonController{
                             $this->spiderFailLog($chapterValue);
                         }else{
                             $is_write = true;
+                            echo "数据校验成功,开始入库\r\n\r\n";
                         }
                     }else{
                         $is_write = true;
+                        echo "数据校验成功,开始入库\r\n\r\n";
                     }
                 }else{
                     echo "数据校验成功,开始入库\r\n\r\n";
@@ -112,7 +118,6 @@ class ChapterScanController extends CommonController{
         $pageHomeData = $this->getPageData($url);
 
         $content = $this->getContent($pageHomeData);
-
         /*获取本章最后分页*/
         $lastPage = $this->getChapterLastPage($content);
 
@@ -120,7 +125,7 @@ class ChapterScanController extends CommonController{
             $this->chapterLastPage = $lastPage;
         }
 
-        echo "《".$chapter->book_name."》第".$chapter->chapter_order."分页扫描完毕,共"."$this->chapterLastPage"."页,id：". $chapter->id ."\r\n";
+        echo "《".$chapter->book_name."》第".$chapter->chapter_order."章扫描完毕,共"."$this->chapterLastPage"."页,id：". $chapter->id ."\r\n";
     }
 
     /**循环处理章节页面 */

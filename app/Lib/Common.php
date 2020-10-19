@@ -42,15 +42,15 @@ class Common
         'X-FORWARDED-FOR:'.$xip,
         );
 
-        // curl_setopt ($curl, CURLOPT_HTTPHEADER, $header);
+        curl_setopt ($curl, CURLOPT_HTTPHEADER, $header);
 
         $rawData = @curl_exec($curl);
 
         $end_time = time();
 
-        echo "抓取时间:" . ($end_time - $start_time)."s\r\n";
+        echo date("Y-m-d H:i:s")."：抓取时间:" . ($end_time - $start_time)."s\r\n";
 
-        Log::notice('抓取页面,网址:'.$url.',耗时'. ($end_time - $start_time) . '秒');
+        Log::notice(date("Y-m-d H:i:s").'：抓取页面,网址:'.$url.',耗时'. ($end_time - $start_time) . '秒');
 
         if (curl_errno($curl)) {
             echo 'Curl error: ' . curl_error($curl);

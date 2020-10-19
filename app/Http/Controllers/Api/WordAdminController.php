@@ -28,6 +28,7 @@ class WordAdminController extends CommonController
 
         $condition[] = ['id','>',0];
 
+
         if($keywoedImg){
             $condition[] = ['local_url','like',"%$keywoedImg%"];
         }
@@ -36,7 +37,7 @@ class WordAdminController extends CommonController
             $condition[] = ['word','like',"%$keywordWord%"];
         }
         
-        $res = $this->wordModel->where($condition)->paginate($limit);
+        $res = $this->wordModel->where($condition)->groupBy('md5')->orderBy('id','desc')->paginate($limit);
 
         foreach ($res as $key => $value) {
             $res[$key]->origin_url = $this->originUrl . $value->origin_url;
