@@ -31,15 +31,22 @@ class Common
 
         curl_setopt($curl, CURLOPT_URL, $url);
 
-        //useragent
-        curl_setopt($curl, CURLOPT_USERAGENT, "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36");
+        curl_setopt($curl, CURLOPT_ENCODING, '');
+
+        // curl_setopt ($curl, CURLOPT_REFERER, "http://www.baidu.com"); 
+        	
+        // curl_setopt ($curl, CURLOPT_COOKIE , $cookie );
+        // //useragent
+        // curl_setopt($curl, CURLOPT_USERAGENT, "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36"); 
         
         /**随机ip */
         $cip = '123.125.68.'.mt_rand(0,254);
         $xip = '125.90.88.'.mt_rand(0,254);
         $header = array(
-        'CLIENT-IP:'.$cip,
-        'X-FORWARDED-FOR:'.$xip,
+            'CLIENT-IP:'.$cip,
+            'X-FORWARDED-FOR:'.$xip,
+            'Accept-Encoding: gzip, deflate, br',
+            'User-Agent: Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36',
         );
 
         curl_setopt ($curl, CURLOPT_HTTPHEADER, $header);
@@ -48,7 +55,7 @@ class Common
 
         $end_time = time();
 
-        echo date("Y-m-d H:i:s")."：抓取时间:" . ($end_time - $start_time)."s\r\n";
+        // echo date("Y-m-d H:i:s")."：抓取时间:" . ($end_time - $start_time)."s\r\n";
 
         Log::notice(date("Y-m-d H:i:s").'：抓取页面,网址:'.$url.',耗时'. ($end_time - $start_time) . '秒');
 
@@ -59,6 +66,12 @@ class Common
         }
 
         curl_close($curl);
+
+        $file = fopen('text.html','a');
+        fwrite($file,$rawData);
+        fclose($file);
+
+        echo $rawData;exit;
         
         if($decode){
             return json_decode($rawData, $assoc);

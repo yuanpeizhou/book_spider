@@ -59,3 +59,10 @@ Artisan::command('bookCheck', function () {
     $check = New \App\Http\Controllers\Api\BookCheckController();
     $check->checkBookComplex();
 })->describe('检查所有书籍爬取结果');
+
+
+/**爬取套图列表 */
+Artisan::command('SetImg', function () {
+    $setImg = New \App\Http\Controllers\Api\SetImgController();
+    $setImg->scan();
+})->describe('检查所有书籍爬取结果');

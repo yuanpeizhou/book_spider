@@ -57,5 +57,11 @@ Route::namespace('Api')->group(function () {
     Route::get('/video/list', 'VideoController@videoList');
 
     Route::get('/book/check', 'BookCheckController@checkBookComplex');
+
+    Route::any('/camera/received', 'CameraController@received');
+    Route::get('/camera/count', 'CameraController@getCountByDate');
+    Route::get('/camera/log', 'CameraController@getLogList');
+
+    Route::get('/img/setimg', 'SetImgController@scan');
 });
 
