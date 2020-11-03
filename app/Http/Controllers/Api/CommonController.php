@@ -26,9 +26,26 @@ class CommonController extends Controller{
      * 获取页面信息
      * @param url string 网页地址
      */
-    public function getPageData($url,$encode = true){
+    public function getPageData($url,$encode = true,$isZip = false){
         $lib = New \App\Lib\Common();
-        $res = $lib->getData($url,false);
+        $res = $lib->getData($url,false,false,false,$isZip);
+
+        if(!$res){
+            echo "页面请求失败，延时30秒尝试第二次请求\r\n";
+            sleep(30);
+            $res = $lib->getData($url,false,false,false,$isZip);
+        }
+
+        if(!$res){
+            echo "页面请求失败，延时60秒尝试第三次请求\r\n";
+            sleep(60);
+            $res = $lib->getData($url,false,false,false,$isZip);
+        }
+
+        if(!$res){
+            echo "页面请求失败,跳过该页面\r\n";
+            return false;
+        }
 
         $code = mb_detect_encoding($res, array('GB2312','UTF-8', 'GBK'));
 

@@ -3,16 +3,17 @@
 namespace App\Http\Controllers\Api;
 use Illuminate\Support\Facades\DB;
 /**
- * 套图类
+ * 宅男女神
  */
-class SetImgController extends CommonController{
+class ZnnsController extends CommonController{
 
     public function __construct()
     {   
-        $webModel = New \App\Models\WebsiteModel();
-        $web =  $webModel->find(2);
+        $this->webModel = New \App\Models\WebsiteModel();
+        $web =  $this->webModel->find(3);
         $this->webUrl = $web->url;
-        $this->model_url = 'forum-155';
+        $this->start = $web->web_index;
+        $this->model_url = 'g';
 
         $this->SetImgModel = New \App\Models\SetImgModel();
 
@@ -23,8 +24,27 @@ class SetImgController extends CommonController{
      * 入口
      */
     public function scan(){
-        echo "开始爬取\r\n";
-        $this->handlePageHome();
+        
+        
+        
+        
+
+        for ($i= $this->start; $i <= 34170 ; $i++) { 
+            $url = $this->webUrl . $this->model_url . '/' . $i;
+            $pageData = $this->getPageData($url);
+            $isPage = $this->checkPage($pageData);
+
+            if($isPage){
+                var_dump($pageData);exit;
+                echo "123\r\n";
+            }else{
+                echo "未查询到该资源\r\n";
+            }
+            $this->webModel->where('id',3)->update(['web_index' => $i + 1]);
+        }
+        // var_dump($pageData);exit;
+        // $this->getPageList($pageData);
+        // echo $pageData;
     }
 
     /**
@@ -142,6 +162,34 @@ class SetImgController extends CommonController{
         $regex ="/<div class=\"pg\">.*?<\/div>/i";
         if(preg_match_all($regex, $str, $matches)){
             return $matches[0][0];
+        }else{
+            return false;
+        }
+    }
+
+    /**
+     * 检查该页面是否有内容
+     */
+    public function checkPage($str){
+        if(strpos($str,'该页面未找到') !== false){
+            return false;
+        }else{
+            return true;
+        }
+    }
+
+    public function getPageList($str){
+        $regex ="/<div id=\"pages\">(.*?)<\/div>/i";
+        if(preg_match_all($regex, $str, $matches)){
+            var_dump($matches);
+            $pageRegex = "/<a href='(.*?)'.*?>(.*?)<\/a>/ism";
+            if(preg_match_all($pageRegex, $matches[1][0], $pageMatches)){
+                var_dump($pageMatches);exit;
+            }else{
+                return false;
+            }
+            
+            return ;
         }else{
             return false;
         }

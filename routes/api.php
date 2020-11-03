@@ -63,5 +63,11 @@ Route::namespace('Api')->group(function () {
     Route::get('/camera/log', 'CameraController@getLogList');
 
     Route::get('/img/setimg', 'SetImgController@scan');
+
+    Route::get('/img/spider', 'SetImgController@spider');
+
+    Route::get('/img/img', 'SetImgController@img');
+
+    Route::get('/znns/scan', 'ZnnsController@scan');
 });
 

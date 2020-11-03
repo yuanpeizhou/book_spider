@@ -65,4 +65,24 @@ Artisan::command('bookCheck', function () {
 Artisan::command('SetImg', function () {
     $setImg = New \App\Http\Controllers\Api\SetImgController();
     $setImg->scan();
-})->describe('检查所有书籍爬取结果');
+})->describe('spider Set Img');
+
+
+/**爬取套图图片信息 */
+Artisan::command('Img', function () {
+    $setImg = New \App\Http\Controllers\Api\SetImgController();
+    $setImg->spider();
+})->describe('spider Imgs');
+
+/**爬取套图图片资源 */
+Artisan::command('spider', function () {
+    $setImg = New \App\Http\Controllers\Api\SetImgController();
+    $setImg->img();
+})->describe('spider source');
+
+
+/**爬取宅男女神 */
+Artisan::command('znns', function () {
+    $obj = New \App\Http\Controllers\Api\ZnnsController();
+    $obj->scan();
+})->describe('spider znns source');
