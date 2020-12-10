@@ -88,6 +88,10 @@ class AotubaController extends CommonController{
             if(!$is_spider){
                 $this->spiderImg($setImgId,$img,1,$title);
             }
+
+            if($is_spider->is_spider == 0){
+                $this->spiderImg($setImgId,$img,1,$title,true,$is_spider);
+            }
         }
         
         /**获取当前页面的最后一页 */
@@ -96,7 +100,7 @@ class AotubaController extends CommonController{
         for ($i= 2; $i <= $lastPage; $i++) { 
             $is_spider = $this->aotubaImgModel->where('aotuba_img_id',$setImgId)->where('order',$i)->first();
 
-            if($is_spider){
+            if($is_spider && $is_spider->is_spider == 1){
                 echo "图片".$is_spider->order."已入库\r\n";
                 continue;
             }
@@ -105,28 +109,42 @@ class AotubaController extends CommonController{
             $pageData = $this->httpRequest($httpUrl);
             $img = $this->getImgList($pageData);
 
-            $this->spiderImg($setImgId,$img,$i,$title);
+            if($is_spider && $is_spider->is_spider == 0){
+                $this->spiderImg($setImgId,$img,$i,$title,true,$is_spider);
+            }else{
+                $this->spiderImg($setImgId,$img,$i,$title);
+            }
+            
         }
     }
 
     /**爬取图片资源并保存 */
-    public function spiderImg($setImgId,$url,$name,$title){
+    public function spiderImg($setImgId,$url,$name,$title,$is_update = false,$img = null){
 
-        $imgTemp = [];
-        $imgTemp['aotuba_img_id'] = $setImgId;
-        $imgTemp['origin_url'] = $url;
-        $imgTemp['created_at'] = date("Y-m-d H:i:s");
-        $imgTemp['order'] = $name;
-
-        $imgFile = $this->httpRequest($url);
-        if($imgFile){
-            $imgTemp['local_url'] = $this->saveImg($title,$imgFile,$name);
-            $imgTemp['is_spider'] = 1;
-        }
-
-        $this->aotubaImgModel->insert($imgTemp);
-
-        echo "图片".$imgTemp['local_url']."保存成功\r\n";
+        if($is_update){
+            $imgFile = $this->httpRequest($url);
+            if($imgFile){
+                $img->origin_url = $url;
+                $img->local_url = $this->saveImg($title,$imgFile,$name);
+                $img->is_spider = 1;
+                $img->save();
+                echo "图片".$img->order."爬取成功\r\n";
+            }
+        }else{
+            $imgTemp = [];
+            $imgTemp['aotuba_img_id'] = $setImgId;
+            $imgTemp['origin_url'] = $url;
+            $imgTemp['created_at'] = date("Y-m-d H:i:s");
+            $imgTemp['order'] = $name;
+    
+            $imgFile = $this->httpRequest($url);
+            if($imgFile){
+                $imgTemp['local_url'] = $this->saveImg($title,$imgFile,$name);
+                $imgTemp['is_spider'] = 1;
+                echo "图片".$imgTemp['local_url']."爬取成功\r\n";
+            }
+            $this->aotubaImgModel->insert($imgTemp);
+        }     
     }
 
     /**
@@ -224,14 +242,14 @@ class AotubaController extends CommonController{
         $res = $this->httpGet($url);
 
         if(!$res){
-            echo "页面请求失败，延时10秒尝试第二次请求\r\n";
-            sleep(10);
+            echo "页面请求失败，延时30秒尝试第二次请求\r\n";
+            sleep(30);
             $res = $this->httpGet($url);
         }
 
         if(!$res){
-            echo "页面请求失败，延时30秒尝试第三次请求\r\n";
-            sleep(30);
+            echo "页面请求失败，延时60秒尝试第三次请求\r\n";
+            sleep(60);
             $res = $this->httpGet($url);
         }
 
