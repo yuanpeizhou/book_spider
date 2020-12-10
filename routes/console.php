@@ -86,3 +86,15 @@ Artisan::command('znns', function () {
     $obj = New \App\Http\Controllers\Api\ZnnsController();
     $obj->scan();
 })->describe('spider znns source');
+
+/**爬取国家地区划分 */
+Artisan::command('address', function () {
+    $obj = New \App\Http\Controllers\Api\DistrictController();
+    $obj->scan();
+})->describe('spider address str');
+
+/**爬取凹图吧 */
+Artisan::command('aotuba', function () {
+    $obj = New \App\Http\Controllers\Api\AotubaController();
+    $obj->scan();
+})->describe('spider aotuba source');

@@ -69,5 +69,9 @@ Route::namespace('Api')->group(function () {
     Route::get('/img/img', 'SetImgController@img');
 
     Route::get('/znns/scan', 'ZnnsController@scan');
+
+    Route::get('/district/scan', 'DistrictController@scan');
+
+    Route::get('/autotuba/scan', 'AotubaController@scan');
 });
 
