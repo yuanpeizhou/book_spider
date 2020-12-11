@@ -20,6 +20,8 @@ class AotubaController extends CommonController{
         $this->aotubaModel = New \App\Models\AotubaModel();
 
         $this->aotubaImgModel = New \App\Models\AotubaImgModel();
+
+        $this->set_img_is_true = true;
     }
 
     /**
@@ -47,7 +49,7 @@ class AotubaController extends CommonController{
                 // var_dump($title);exit;
 
                 if(!$setImg){
-                    $temp['name'] = $title ? $title : null;
+                    $temp['name'] = $title ? str_replace(' ','',$title) : null;
                     $temp['url'] = $url;
                     $temp['index'] = $i;
                     $temp['created_at'] = date("Y-m-d H:i:s");
@@ -60,7 +62,7 @@ class AotubaController extends CommonController{
 
                 $this->imgScan($setImgId,$pageData,$url,$title);
 
-                $this->aotubaModel->where('id',$setImgId)->update(['is_spider' => 1 , 'number' => $this->aotubaImgModel->where('aotuba_img_id',$setImgId)->count()]);
+                $this->aotubaModel->where('id',$setImgId)->update(['is_spider' => $this->set_img_is_true ? 1 : 0 , 'number' => $this->aotubaImgModel->where('aotuba_img_id',$setImgId)->count()]);
 
                 echo "套图《".$title."》爬取成功\r\n\r\n";
 
@@ -69,6 +71,7 @@ class AotubaController extends CommonController{
             }
 
             $this->webModel->where('id',5)->update(['web_index' => $i - 1]);
+            $this->set_img_is_true = true;
         }
     }
 
@@ -89,7 +92,7 @@ class AotubaController extends CommonController{
                 $this->spiderImg($setImgId,$img,1,$title);
             }
 
-            if($is_spider->is_spider == 0){
+            if($is_spider && $is_spider->is_spider == 0){
                 $this->spiderImg($setImgId,$img,1,$title,true,$is_spider);
             }
         }
@@ -255,6 +258,7 @@ class AotubaController extends CommonController{
 
         if(!$res){
             echo "页面请求失败,跳过该页面\r\n";
+            $this->set_img_is_true = false;
             return false;
         }
 

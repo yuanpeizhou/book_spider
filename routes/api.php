@@ -73,5 +73,7 @@ Route::namespace('Api')->group(function () {
     Route::get('/district/scan', 'DistrictController@scan');
 
     Route::get('/autotuba/scan', 'AotubaController@scan');
+
+    Route::get('/zhongtu/scan', 'ZhongtuController@scan');
 });
 
