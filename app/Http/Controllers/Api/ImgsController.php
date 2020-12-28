@@ -25,11 +25,17 @@ class ImgsController extends CommonController{
         $page = request()->page ? intval(request()->page) : 1;
         $limit = request()->limit ? intval(request()->limit) : 10;
 
+        $imgs_model = New \App\Models\FaImgsModel();
+
 
         $condition[] = ['is_spider','=',1];
 
 
         $res = $this->model->where($condition)->paginate($limit);
+
+        foreach ($res as $key => $value) {
+            $res[$key]->img_list = $imgs_model->select('local_url')->where('img_id',$value['id'])->orderBy('order')->limit(3)->get();
+        }
 
         return $this->returnApi(200,'ok',$res);
     }
