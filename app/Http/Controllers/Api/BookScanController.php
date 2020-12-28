@@ -48,7 +48,7 @@ class BookScanController extends CommonController{
      */
     protected $chapterList = [];
 
-    protected $start = 1;
+    protected $start = 11152;
 
     protected $pageSize = 20;
 
@@ -166,7 +166,6 @@ class BookScanController extends CommonController{
      * ]
      */
     public function handleBookInfo($bookUrl){
-
         /**获取首页信息 */
         $bookHomePage = $this->getPageData($bookUrl);
 

@@ -98,3 +98,16 @@ Artisan::command('aotuba', function () {
     $obj = New \App\Http\Controllers\Api\AotubaController();
     $obj->scan();
 })->describe('spider aotuba source');
+
+/**24fa套图扫描 */
+Artisan::command('fascan', function () {
+    $obj = New \App\Http\Controllers\Api\FaController();
+    $obj->scan();
+})->describe('scan fa source');
+
+
+/**24fa资源爬取 */
+Artisan::command('faspider', function () {
+    $obj = New \App\Http\Controllers\Api\FaController();
+    $obj->spider();
+})->describe('spider fa source');

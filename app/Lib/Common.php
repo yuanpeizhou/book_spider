@@ -42,14 +42,15 @@ class Common
         // curl_setopt ($curl, CURLOPT_COOKIE , $cookie );
         // //useragent
         // curl_setopt($curl, CURLOPT_USERAGENT, "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36"); 
-        
+        curl_setopt ($curl, CURLOPT_REFERER, "http://www.diyibanzhu3.in/");  
+
         /**伪装百度爬虫 */
-        $ip=mt_rand(11, 191).".".mt_rand(0, 240).".".mt_rand(1, 240).".".mt_rand(1, 240); 
-        $header = array(
-            'CLIENT-IP:'.$ip,
-            'X-FORWARDED-FOR:'.$ip,
-        );    //构造ip
-        curl_setopt($curl, CURLOPT_USERAGENT, 'Baiduspider+(+http://www.baidu.com/search/spider.htm)');
+        // $ip=mt_rand(11, 191).".".mt_rand(0, 240).".".mt_rand(1, 240).".".mt_rand(1, 240); 
+        // $header = array(
+        //     'CLIENT-IP:'.$ip,
+        //     'X-FORWARDED-FOR:'.$ip,
+        // );    //构造ip
+        // curl_setopt($curl, CURLOPT_USERAGENT, 'Baiduspider+(+http://www.baidu.com/search/spider.htm)');
         
         // $cip = '123.125.68.'.mt_rand(0,254);
         // $xip = '125.90.88.'.mt_rand(0,254);
@@ -61,7 +62,7 @@ class Common
             $header[] =  'Accept-Encoding: gzip, deflate, br';
         }
 
-        curl_setopt ($curl, CURLOPT_HTTPHEADER, $header);
+        // curl_setopt ($curl, CURLOPT_HTTPHEADER, $header);
 
         $rawData = @curl_exec($curl);
 

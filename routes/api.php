@@ -75,5 +75,15 @@ Route::namespace('Api')->group(function () {
     Route::get('/autotuba/scan', 'AotubaController@scan');
 
     Route::get('/zhongtu/scan', 'ZhongtuController@scan');
+
+    Route::get('/24fa/scan', 'FaController@scan');
+
+    Route::get('/24fa/spider', 'FaController@spider');
+
+    Route::get('/dpi/output', 'DpiController@dpi');
+
+    Route::get('/imgs/list', 'ImgsController@imgsList');
+
+    Route::get('/imgs/info', 'ImgsController@imgsInfo');
 });
 

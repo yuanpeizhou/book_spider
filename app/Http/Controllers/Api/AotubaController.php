@@ -28,6 +28,11 @@ class AotubaController extends CommonController{
      * 入口
      */
     public function scan(){
+
+        // $url= 'https://www.tuao8.cc/zb_users/upload/2020/11/202011161605513275401539.jpg';
+        // $pageData = $this->httpRequest($url);
+        // echo $pageData;
+        // exit;
         echo "开始爬取\r\n";
         for ($i = $this->start; $i >= 1; $i--) { 
             /**
@@ -295,7 +300,7 @@ class AotubaController extends CommonController{
         curl_setopt ($curl, CURLOPT_FOLLOWLOCATION, 1);
 
         /**超时 */
-        curl_setopt($curl, CURLOPT_TIMEOUT, 30);
+        curl_setopt($curl, CURLOPT_TIMEOUT, 60);
 
         //useragent
         curl_setopt($curl, CURLOPT_USERAGENT, "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36"); 
