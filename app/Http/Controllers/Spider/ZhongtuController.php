@@ -12,143 +12,17 @@ class ZhongtuController extends CommonController{
     public function __construct()
     {   
         $this->webModel = New \App\Models\WebsiteModel();
-        $web =  $this->webModel->find(6);
 
+        $web =  $this->webModel->find(6);
+        
         $this->webUrl = $web->url;
         $this->start = $web->web_index;
 
-        $this->type_model = New \App\Models\ZhongtuBookTypeModel();
-    }
+        $this->aotubaModel = New \App\Models\AotubaModel();
 
-    /**
-     * 爬取中图网书籍分类
-     */
-    public function spiderType(){
-        $url = $this->webUrl . 'books/kinder/';
+        $this->aotubaImgModel = New \App\Models\AotubaImgModel();
 
-        $pageData = $this->httpRequest($url);
-
-        $first_type_list = $this->getFirstTitle($pageData);
-        $second_type_lists = $this->getSecondTitle($pageData);
-
-        
-        foreach ($first_type_list['title'] as $first_key => $first_value) {
-            $first_index = $this->getIndex($first_type_list['index'][$first_key]);
-            $first_is_repeat = $this->type_model->where('index',$first_index)->first();
-
-            $first_data = [
-                'name' => $first_value,
-                'pid' => 0,
-                'level' => 1,
-            ];
-            
-            if($first_is_repeat){
-                $first_id = $first_is_repeat->id;
-                $first_data['updated_at'] = date("Y-m-d H:i:s");
-
-                $this->type_model->where('index',$first_index)->update($first_data);
-
-            }else{
-                $first_data['index'] = $first_index; 
-                $first_data['created_at'] = date("Y-m-d H:i:s");
-
-                $first_id = $this->type_model->insertGetId($first_data); 
-            }
-
-            $id_path = $first_id;
-            $name_path = $first_value;
-
-            $first_path_data = [
-                'id_path' => $id_path,
-                'name_path' => $name_path
-            ];
-
-            $this->type_model->where('index',$first_index)->update($first_path_data);
-
-            
-
-            $second_type_list = $this->getSecondTitle2($second_type_lists[$first_key]);
-
-            foreach ($second_type_list['title'] as $second_key => $second_value) {
-                $second_index = $this->getIndex($second_type_list['index'][$second_key]);
-                $second_is_repeat = $this->type_model->where('index',$second_index)->first();
-
-                $second_data = [
-                    'name' => $second_value,
-                    'pid' => 1,
-                    'level' => 2,
-                ];
-
-                if($second_is_repeat){
-                    $second_id = $second_is_repeat->id;
-                    $second_data['updated_at'] = date("Y-m-d H:i:s");
-    
-                    $this->type_model->where('index',$second_index)->update($second_data);
-    
-                }else{
-                    $second_data['index'] = $second_index; 
-                    $second_data['created_at'] = date("Y-m-d H:i:s");
-    
-                    $second_id = $this->type_model->insertGetId($second_data); 
-                }
-                
-                $second_id_path = $id_path  .'-' . $second_id;
-                $second_name_path = $name_path . '-' .$second_value;
-    
-                $second_path_data = [
-                    'id_path' => $second_id_path,
-                    'name_path' => $second_name_path,
-                ];
-
-                $this->type_model->where('index',$second_index)->update($second_path_data);
-
-                $third_type_list = $this->getThidTypeList($second_index);
-
-            }
-
-            if($second_key == 2){
-                var_dump('ok');exit;
-            }
-
-
-             
-        }
-
-        $sceond_title_list = $this->getSecondTitle($pageData);
-
-        var_dump($sceond_title_list);exit;
-    }
-
-    public function getIndex($str){
-        $array = explode('/',$str);
-        $array = array_filter($array);
-
-        return array_pop($array);
-    }
-
-    public function getThidTypeList($index){
-        $url = $this->webUrl . 'kinder/' . $index . '/'; 
-
-        $pageData = $this->httpRequest($url);
-
-        $test = $this->getThirdTitle($pageData);
-
-        // var_dump($test);exit;
-    }
-
-    public function getThirdTitle($str){
-        $regex = "/<ul id=\"sele_catelist\">.*?<\/ul>/ism";
-        if(preg_match_all($regex, $str , $matches)){
-
-            if($matches){
-                var_dump($matches);exit;
-            }
-
-            return $matches[0];
-
-        }else{  
-            return null;
-        }
+        // $this->set_img_is_true = true;
     }
 
     /**
@@ -200,54 +74,98 @@ class ZhongtuController extends CommonController{
      * 入口
      */
     public function scan(){
-
-        $this->spiderType();
         
-        // echo "开始爬取\r\n";
-        // for ($i = $this->start; $i >= 1; $i--) { 
-        //     /**
-        //      * 检查套图信息是否爬取完毕
-        //      */
-        //     $setImg = $this->aotubaModel->where('index',$i)->first();
-        //     if($setImg && $setImg->is_spider == 1){
-        //         continue;
-        //     }
+        echo "开始爬取\r\n";
+        for ($i = $this->start; $i >= 1; $i--) { 
+            /**
+             * 检查套图信息是否爬取完毕
+             */
+            $setImg = $this->aotubaModel->where('index',$i)->first();
+            if($setImg && $setImg->is_spider == 1){
+                continue;
+            }
 
-        //     $temp = [];
-        //     $url = $this->webUrl . $this->model_url . '/' . $i . '.html';
-        //     $pageData = $this->httpRequest($url);
-        //     // echo $pageData;exit;
-        //     $isPage = $this->checkPage($pageData);
+            $temp = [];
+            $url = $this->webUrl . $this->model_url . '/' . $i . '.html';
+            $pageData = $this->httpRequest($url);
+            // echo $pageData;exit;
+            $isPage = $this->checkPage($pageData);
 
-        //     if($isPage){
-        //         $title = $this->getTitle($pageData);
-        //         // var_dump($title);exit;
+            if($isPage){
+                $title = $this->getTitle($pageData);
+                // var_dump($title);exit;
 
-        //         if(!$setImg){
-        //             $temp['name'] = $title ? str_replace(' ','',$title) : null;
-        //             $temp['url'] = $url;
-        //             $temp['index'] = $i;
-        //             $temp['created_at'] = date("Y-m-d H:i:s");
-        //             $setImgId = $this->aotubaModel->insertGetId($temp);
-        //         }else{
-        //             $setImgId = $setImg->id;
-        //         }
+                if(!$setImg){
+                    $temp['name'] = $title ? str_replace(' ','',$title) : null;
+                    $temp['url'] = $url;
+                    $temp['index'] = $i;
+                    $temp['created_at'] = date("Y-m-d H:i:s");
+                    $setImgId = $this->aotubaModel->insertGetId($temp);
+                }else{
+                    $setImgId = $setImg->id;
+                }
 
-        //         echo "套图《".$title."》信息保存成功,开始爬取图片\r\n";
+                echo "套图《".$title."》信息保存成功,开始爬取图片\r\n";
 
-        //         $this->imgScan($setImgId,$pageData,$url,$title);
+                $this->imgScan($setImgId,$pageData,$url,$title);
 
-        //         $this->aotubaModel->where('id',$setImgId)->update(['is_spider' => $this->set_img_is_true ? 1 : 0 , 'number' => $this->aotubaImgModel->where('aotuba_img_id',$setImgId)->count()]);
+                $this->aotubaModel->where('id',$setImgId)->update(['is_spider' => $this->set_img_is_true ? 1 : 0 , 'number' => $this->aotubaImgModel->where('aotuba_img_id',$setImgId)->count()]);
 
-        //         echo "套图《".$title."》爬取成功\r\n\r\n";
+                echo "套图《".$title."》爬取成功\r\n\r\n";
 
-        //     }else{
-        //         echo "未查询到该资源,跳过\r\n\r\n";
-        //     }
+            }else{
+                echo "未查询到该资源,跳过\r\n\r\n";
+            }
 
-        //     $this->webModel->where('id',5)->update(['web_index' => $i - 1]);
-        //     $this->set_img_is_true = true;
-        // }
+            $this->webModel->where('id',5)->update(['web_index' => $i - 1]);
+            $this->set_img_is_true = true;
+        }
+    }
+
+    /**
+     * 扫描图片
+     */
+    public function imgScan($setImgId,$pageData,$url,$title){
+        $imgList = [];
+        $isEnd = false;
+
+        /**获取第一页的图片 */
+        $img = $this->getImgList($pageData);
+
+        if($img){
+            $is_spider = $this->aotubaImgModel->where('aotuba_img_id',$setImgId)->where('order',1)->first();
+
+            if(!$is_spider){
+                $this->spiderImg($setImgId,$img,1,$title);
+            }
+
+            if($is_spider && $is_spider->is_spider == 0){
+                $this->spiderImg($setImgId,$img,1,$title,true,$is_spider);
+            }
+        }
+        
+        /**获取当前页面的最后一页 */
+        $lastPage = $this->lastPageRegex($pageData);
+
+        for ($i= 2; $i <= $lastPage; $i++) { 
+            $is_spider = $this->aotubaImgModel->where('aotuba_img_id',$setImgId)->where('order',$i)->first();
+
+            if($is_spider && $is_spider->is_spider == 1){
+                echo "图片".$is_spider->order."已入库\r\n";
+                continue;
+            }
+
+            $httpUrl = $url . '?page=' . $i;
+            $pageData = $this->httpRequest($httpUrl);
+            $img = $this->getImgList($pageData);
+
+            if($is_spider && $is_spider->is_spider == 0){
+                $this->spiderImg($setImgId,$img,$i,$title,true,$is_spider);
+            }else{
+                $this->spiderImg($setImgId,$img,$i,$title);
+            }
+            
+        }
     }
 
     /**爬取图片资源并保存 */
@@ -277,6 +195,35 @@ class ZhongtuController extends CommonController{
             }
             $this->aotubaImgModel->insert($imgTemp);
         }     
+    }
+
+    /**
+     * 获取套图名称
+     */
+    public function getTitle($str){
+        $regex ="/<h1 class=\"title\">(.*?)<\/h1>/i";
+        if(preg_match_all($regex, $str, $matches)){
+            if(isset($matches[1][0])){
+                return $matches[1][0];
+            }else{
+                return false;
+            }
+        }else{
+            return false;
+        }
+    }
+
+    /**
+     * 获取页面页码信息
+     */
+    public function lastPageRegex($str){
+        $regex ="/<li><a href=\".*?\">(.*?)<\/a><\/li>/i";
+        if(preg_match_all($regex, $str, $matches)){
+            array_pop($matches[1]);
+            return array_pop($matches[1]);
+        }else{
+            return false;
+        }
     }
 
     /**
@@ -376,6 +323,8 @@ class ZhongtuController extends CommonController{
      */
     public function httpGet($url){
 
+        // $url = "http://www.cdbottle.com/";
+
         $start_time = time();
 
         $curl = curl_init();
@@ -399,7 +348,27 @@ class ZhongtuController extends CommonController{
         curl_setopt($curl, CURLOPT_USERAGENT, "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36"); 
 
         /** REFERER(伪造来路)*/
-        curl_setopt ($curl, CURLOPT_REFERER, $this->webUrl);  
+        // curl_setopt ($curl, CURLOPT_REFERER, "https://www.nvshens.org/");  
+
+        // /**伪装百度爬虫 */
+        // $ip=mt_rand(11, 191).".".mt_rand(0, 240).".".mt_rand(1, 240).".".mt_rand(1, 240); 
+        // $header = array(
+        //     'CLIENT-IP:'.$ip,
+        //     'X-FORWARDED-FOR:'.$ip,
+        // );//构造ip
+        // curl_setopt($curl, CURLOPT_USERAGENT, 'Baiduspider+(+http://www.baidu.com/search/spider.htm)');
+        // curl_setopt ($curl, CURLOPT_HTTPHEADER, $header);
+
+        //代理:9401
+        // curl_setopt($curl, CURLOPT_PROXYAUTH, CURLAUTH_BASIC); //代理认证模式
+
+        // $ipInfo = $this->getIp();
+        // if($ipInfo['ip']){
+        //     curl_setopt($curl, CURLOPT_PROXY, $ipInfo['ip']); //代理服务器地址  
+        //     curl_setopt($curl, CURLOPT_PROXYPORT,$ipInfo['port']); //代理服务器端口
+        //     curl_setopt($curl, CURLOPT_PROXYTYPE, CURLPROXY_HTTP);
+        // }
+
 
         $rawData = @curl_exec($curl);
 
@@ -416,11 +385,10 @@ class ZhongtuController extends CommonController{
         }
 
         curl_close($curl);
-
-        // if(mb_strpos($rawData,'404 - ') !== false){
-        //     echo "未成功抓取图片";
-        //     return false;
-        // }
+        if(mb_strpos($rawData,'404 - ') !== false){
+            echo "未成功抓取图片";
+            return false;
+        }
 
         return $rawData;
     }

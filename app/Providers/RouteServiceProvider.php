@@ -39,6 +39,10 @@ class RouteServiceProvider extends ServiceProvider
 
         $this->mapWebRoutes();
 
+        $this->mapAdminRoutes();
+
+        $this->mapSpiderRoutes();
+
         //
     }
 
@@ -52,8 +56,8 @@ class RouteServiceProvider extends ServiceProvider
     protected function mapWebRoutes()
     {
         Route::middleware('web')
-             ->namespace($this->namespace)
-             ->group(base_path('routes/web.php'));
+            ->namespace($this->namespace)
+            ->group(base_path('routes/web.php'));
     }
 
     /**
@@ -66,8 +70,38 @@ class RouteServiceProvider extends ServiceProvider
     protected function mapApiRoutes()
     {
         Route::prefix('api')
-             ->middleware('api')
-             ->namespace($this->namespace)
-             ->group(base_path('routes/api.php'));
+            ->middleware('api')
+            ->namespace($this->namespace)
+            ->group(base_path('routes/api.php'));
+    }
+
+    /**
+     * Define the "admin" routes for the application.
+     *
+     * These routes are typically stateless.
+     *
+     * @return void
+     */
+    protected function mapAdminRoutes()
+    {
+        Route::prefix('admin')
+            // ->middleware('api')
+            ->namespace($this->namespace)
+            ->group(base_path('routes/admin.php'));
+    }
+
+    /**
+     * Define the "spider" routes for the application.
+     *
+     * These routes are typically stateless.
+     *
+     * @return void
+     */
+    protected function mapSpiderRoutes()
+    {
+        Route::prefix('spider')
+            // ->middleware('api')
+            ->namespace($this->namespace)
+            ->group(base_path('routes/spider.php'));
     }
 }
