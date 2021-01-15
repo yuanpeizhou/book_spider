@@ -390,7 +390,7 @@ class ZhongtuController extends CommonController{
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
 
         /**跟随跳转 */
-        curl_setopt ($curl, CURLOPT_FOLLOWLOCATION, 1);
+        // curl_setopt ($curl, CURLOPT_FOLLOWLOCATION, 1);
 
         /**超时 */
         curl_setopt($curl, CURLOPT_TIMEOUT, 30);
