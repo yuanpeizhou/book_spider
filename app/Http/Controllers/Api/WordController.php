@@ -5,9 +5,13 @@ use App\Exceptions\ParamsErrorException;
 /*图片爬取处理*/
 class WordController extends CommonController
 {   
-    protected $book_start;
+    protected $current_book_id = null;
 
-    protected $book_end;
+    protected $current_chapter_id = null;
+
+    protected $book_start = 19;
+
+    protected $book_end = 19;
 
     protected $chapter_size = 100;
 
@@ -18,7 +22,7 @@ class WordController extends CommonController
     protected $img_save_path;
 
 
-    public function __construct()
+    public function __construct($book_start = null ,$book_end = null)
     {
         $this->model = New \App\Models\WordModel();
         $this->common = New \App\Lib\Common();
@@ -33,62 +37,7 @@ class WordController extends CommonController
     }
     // api/count/user,api/count/activity,api/count/reservation
 
-    /**
-     * 临时测试方法
-     */
-    public function md5(){
-        $word_list = $this->word_model->get();
-        foreach ($word_list as $key => $value) {
-            $md5 = $this->getFileMd5($value);
-            $value->md5 = $md5;
-            $value->save();
-        }
-        echo 'ok';
-        // for ($i=1817; $i <= 1817; $i++) { 
-        //     $first_word = $this->model->find($i);
 
-        //     if($first_word->word){
-        //         $first_md5 = $this->getFileMd5($first_word);
-
-        //         $word_list = $this->model->whereRaw('word is null')->get();
-    
-        //         $temp = [];
-        
-        //         foreach ($word_list as $key => $value) {
-        
-        //             $file_md5 = $this->getFileMd5($value);
-        
-        //             if($file_md5 == $first_md5){
-        //                 $temp[] = $value->id;
-        //             }
-        //         }
-        
-        //         $res = $this->model->whereIn('id',$temp)->update(['word' => $first_word->word]);
-        //     }
-        // }
-
-        // if(!$res){
-        //     echo "error";
-        // }else{
-        //     echo "yes";
-        // }
-        // var_dump($temp);exit;
-    }
-
-    /**
-     * 获取文件md5码
-     */
-    function getFileMd5($local_url){
-        $md5 = null;
-
-        $path = base_path() . DIRECTORY_SEPARATOR . $local_url;
-
-        if(file_exists($path)){
-            $md5 = md5_file($path);
-        }
-        
-        return $md5;
-    }
 
 
     /*扫描爬取图片并识别图片*/
@@ -121,12 +70,7 @@ class WordController extends CommonController
         for ($i=1; $i <= $this->chapter_page; $i++) { 
             echo "开始处理第". $i . "页章节\r\n";
 
-            
-
-
-            $id_list = $this->chapter_model->where('img_is_scan',0)->orderBy('id')->limit($this->chapter_size)->pluck('id');
-
-            
+            $id_list = $this->chapter_model->where('img_is_scan',0)->where('is_spider',1)->orderBy('id')->limit($this->chapter_size)->pluck('id');
 
             $chapter_list = $this->chapter_model->select('id','source_content')->whereIn('id',$id_list)->where('is_spider',1)->orderBy('id')->simplePaginate($this->chapter_size);
 
@@ -134,8 +78,9 @@ class WordController extends CommonController
                 echo "未查询到章节数据";continue;
             }
 
-
             $chapter_id_list = [];
+
+            
             foreach ($chapter_list as $key => $value) {
                 echo "id：".$value->id."\r\n";
                 $res = $this->handleImg($value->source_content);
@@ -304,6 +249,22 @@ class WordController extends CommonController
         }else{
             return '';
         }
+    }
+
+    /**
+     * 获取图片md5码
+     * @param local_url string 图片本地储存地址
+     */
+    function getFileMd5($local_url){
+        $md5 = null;
+
+        $path = base_path() . DIRECTORY_SEPARATOR . $local_url;
+
+        if(file_exists($path)){
+            $md5 = md5_file($path);
+        }
+        
+        return $md5;
     }
 }
 

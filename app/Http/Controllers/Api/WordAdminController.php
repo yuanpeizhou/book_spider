@@ -37,7 +37,7 @@ class WordAdminController extends CommonController
             $condition[] = ['word','like',"%$keywordWord%"];
         }
         
-        $res = $this->wordModel->where($condition)->groupBy('md5')->orderBy('id','desc')->paginate($limit);
+        $res = $this->wordModel->whereRaw('word is null')->where($condition)->groupBy('md5')->orderBy('id','desc')->paginate($limit);
 
         foreach ($res as $key => $value) {
             $res[$key]->origin_url = $this->originUrl . $value->origin_url;
@@ -57,8 +57,17 @@ class WordAdminController extends CommonController
             return $this->returnApi(201,'参数传递错误','');
         }
 
-        $wordRes->word = $word;
-        $res = $wordRes->save();
+        $repeat_word_list = $this->wordModel->where('md5',$wordRes['md5'])->get();
+
+        foreach ($repeat_word_list as $key => $value) {
+            $value->word = $word;
+            $value->save();
+        }
+
+        $res = true;
+
+        // $wordRes->word = $word;
+        // $res = $wordRes->save();
 
         if(!$res){
             return $this->returnApi(202,'保存失败');

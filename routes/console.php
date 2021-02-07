@@ -19,7 +19,7 @@ Artisan::command('inspire', function () {
 
 
 Artisan::command('imgHandle', function () {
-    $word = New \App\Http\Controllers\Api\WordController();
+    $word = New \App\Http\Controllers\Spider\WordController();
     $word->handle();
     // $this->info("Building {$tag}!");
 })->describe('扫描出图片资源');
@@ -34,11 +34,13 @@ Artisan::command('bookscan  {file_name} {url}', function ($file_name,$url) {
     $book->scan();
 })->describe('scan book');
 
+/**1 */
 Artisan::command('libscan', function () {
     $lib = New \App\Http\Controllers\Api\LibScanController();
     $lib->scan();
 })->describe('scan lib');
 
+/**2 */
 Artisan::command('bookChapterScan', function () {
     $book = New \App\Http\Controllers\Api\BookScanController();
     $book->chapterNumScan();
@@ -111,3 +113,15 @@ Artisan::command('faspider', function () {
     $obj = New \App\Http\Controllers\Api\FaController();
     $obj->spider();
 })->describe('spider fa source');
+
+/**颜控套图扫描 */
+Artisan::command('yanscan', function () {
+    $obj = New \App\Http\Controllers\Spider\YankongController();
+    $obj->scan();
+})->describe('scan yan source');
+
+/**颜控资源爬取 */
+Artisan::command('yanspider', function () {
+    $obj = New \App\Http\Controllers\Spider\YankongController();
+    $obj->spider();
+})->describe('spider yan source');

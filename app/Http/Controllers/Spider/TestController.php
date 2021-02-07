@@ -1,9 +1,13 @@
 <?php
 
 namespace App\Http\Controllers\Spider;
-
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\DB;
+// require_once 'vendor/autoload.php';
+use TencentCloud\Common\Credential;
+use TencentCloud\Common\Profile\ClientProfile;
+use TencentCloud\Common\Profile\HttpProfile;
+use TencentCloud\Common\Exception\TencentCloudSDKException;
+use TencentCloud\Ocr\V20181119\OcrClient;
+use TencentCloud\Ocr\V20181119\Models\GeneralBasicOCRRequest;
 /**
  * 落花有声网
  */
@@ -16,7 +20,7 @@ class TestController {
         echo $data;
     }
     
-        /**
+    /**
      * 爬取请求(最多重复请求三次)
      * 
      */
@@ -104,6 +108,106 @@ class TestController {
         // }
 
         return $rawData;
+    }
+
+    // public function ocr(){
+
+    // }
+
+    public function ocr(){
+
+        $url = 'http://www.diyibanzhu2.in//toimg/data/3016272389.png';
+
+        $img_data = $this->getData($url,false,false);
+
+        $this->saveImg(null,$img_data);
+
+        // var_dump($img_data);exit;
+
+        // $path = base_path() . DIRECTORY_SEPARATOR . 'public\word\8217289262.png';
+
+        // $file = \file_get_contents($path);
+
+        // $file_base64 = base64_encode($file);
+
+        // try {
+
+        //     $cred = new Credential("AKIDIO6h5TkdNSPTKusnuoVv4fz5wqVwm1mZ", "vxpvQ5lDVdYP6buFOQaZKtLdU91mAJPK");
+        //     $httpProfile = new HttpProfile();
+        //     $httpProfile->setEndpoint("ocr.tencentcloudapi.com");
+              
+        //     $clientProfile = new ClientProfile();
+        //     $clientProfile->setHttpProfile($httpProfile);
+        //     $client = new OcrClient($cred, "ap-guangzhou", $clientProfile);
+
+        //     // $client->setDefaultOption('verify', false);
+        
+        //     $req = new GeneralBasicOCRRequest();
+
+        //     $path = base_path() . DIRECTORY_SEPARATOR . 'public' . DIRECTORY_SEPARATOR . 'word' . DIRECTORY_SEPARATOR . 'public\word\0152730126.png';
+
+        //     $params = array(
+        //         "ImageUrl" => "http://www.diyibanzhu2.in//toimg/data/6831680769.png"
+        //         // "ImageBase64" => $file_base64
+        //     );
+        //     $req->fromJsonString(json_encode($params));
+        
+        //     $resp = $client->GeneralBasicOCR($req);
+        
+        //     print_r($resp->toJsonString());
+        // }
+        // catch(TencentCloudSDKException $e) {
+        //     var_dump($e);exit;
+        // }
+    }
+
+    /*保存图片*/
+    public function saveImg($fileName,$data = null){
+        $savePath = 'public' . DIRECTORY_SEPARATOR . 'test.png';
+        $path = base_path() . DIRECTORY_SEPARATOR . $savePath;
+        $file = fopen($path,'w');
+        fwrite($file,$data);
+        fclose($file);
+        // return $path;
+        // echo '接收文件'.$fileName;
+        return $savePath;
+    }
+
+    public static function getData($url, $decode = true, $assoc = true){
+
+        $curl = curl_init();
+        
+        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($curl, CURLOPT_TIMEOUT, 120);
+
+        curl_setopt($curl, CURLOPT_URL, $url);
+
+        curl_setopt ($curl, CURLOPT_REFERER, "http://www.diyibanzhu2.in/");  
+
+
+        $rawData = @curl_exec($curl);
+
+        if (curl_errno($curl)) {
+            echo 'Curl error: ' . curl_error($curl);
+            curl_close($curl);
+            return false;
+        }
+
+        if(strpos($rawData,'NAME="robots"') !== false){
+            curl_close($curl);
+            return false;
+        }
+
+        curl_close($curl);
+        
+        if($decode){
+            return json_decode($rawData, $assoc);
+        }else{
+            return $rawData;
+        }
     }
 
 }

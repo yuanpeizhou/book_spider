@@ -18,8 +18,8 @@ Route::get('/', function () {
 /*测试ocr*/
 Route::get('/ocr',function() {
     $ocr = new TesseractOCR();
-    https://www.diyibanzhu4.pro/toimg/data/a1.png
-    $res = $ocr->image('D:/Wamp/www/spider/public/img/9.png')
+    
+    $res = $ocr->image('D:\Wamp\www\book_spider\public\word\test.png')
     ->lang('chi_sim', 'chi_tra')
     ->run();
 
