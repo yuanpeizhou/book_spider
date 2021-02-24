@@ -24,14 +24,19 @@ class ImgsController extends CommonController{
     public function imgsList(){
         $page = request()->page ? intval(request()->page) : 1;
         $limit = request()->limit ? intval(request()->limit) : 10;
+        $keyword = request()->keyword;
 
         $imgs_model = New \App\Models\FaImgsModel();
 
 
         $condition[] = ['is_spider','=',1];
 
+        if($keyword){
+            $condition[] = ['name','like',"%$keyword%"];
+        }
 
-        $res = $this->model->where($condition)->paginate($limit);
+
+        $res = $this->model->select('id','name','index','number')->where($condition)->paginate($limit);
 
         foreach ($res as $key => $value) {
             $res[$key]->img_list = $imgs_model->select('local_url')->where('img_id',$value['id'])->orderBy('order')->limit(3)->get();
@@ -46,7 +51,7 @@ class ImgsController extends CommonController{
         $id = request()->id;
 
 
-        $res = $imgs_model->where('img_id',$id)->orderBy('order')->get();
+        $res = $imgs_model->where('img_id',$id)->orderBy('order','desc')->get();
 
         return $this->returnApi(200,'ok',$res);
     }

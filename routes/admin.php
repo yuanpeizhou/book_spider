@@ -17,4 +17,11 @@ Route::namespace('Admin')->group(function () {
     Route::get('/book/export', 'BookController@bookExport');//导出书籍
     
     Route::get('book/getSpiderCommond','BookController@bookSpider');//获取书籍爬取命令
+
+    /**
+     * 颜控网
+     */
+    Route::get('/yankongImgs/list', 'YankongImgsController@imgsList');//导出书籍
+    
+    Route::get('/yankongImgs/info','YankongImgsController@imgsInfo');//获取书籍爬取命令
 });

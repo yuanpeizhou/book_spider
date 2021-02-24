@@ -120,6 +120,8 @@ class YankongController{
                         continue;
                     }
 
+                    $imgsUrl = str_replace('pic5','pic1',$imgsUrl);
+
                     $imgFile = $this->httpRequest($imgsUrl);
 
                     if(!$imgs){
@@ -305,13 +307,13 @@ class YankongController{
 
         if(!$res){
             echo "页面请求失败，延时3秒尝试第二次请求\r\n";
-            sleep(3);
+            sleep(10);
             $res = $this->httpGet($url);
         }
 
         if(!$res){
             echo "页面请求失败，延时3秒尝试第三次请求\r\n";
-            sleep(3);
+            sleep(30);
             $res = $this->httpGet($url);
         }
 
@@ -360,7 +362,7 @@ class YankongController{
         curl_setopt($curl, CURLOPT_USERAGENT, "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36"); 
 
         /** REFERER(伪造来路)*/
-        curl_setopt ($curl, CURLOPT_REFERER, "https://www.yunu8.xyz/");  
+        curl_setopt ($curl, CURLOPT_REFERER, "pic1.ykmeinv.com");  
 
         $rawData = @curl_exec($curl);
 
