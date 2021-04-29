@@ -282,12 +282,12 @@ class FaController extends CommonController{
 
     /*保存图片*/
     public function saveImg($dirName,$data = null,$fileName){
-        $saveDir =  base_path() . DIRECTORY_SEPARATOR . 'public' . DIRECTORY_SEPARATOR . '24fa_img' . DIRECTORY_SEPARATOR . $dirName;
+        $saveDir =  base_path() . DIRECTORY_SEPARATOR . 'public' . DIRECTORY_SEPARATOR . '24fa_img' . DIRECTORY_SEPARATOR . date("Y-m-d") . DIRECTORY_SEPARATOR . $dirName;
         if(!is_dir($saveDir)){
             try {
                 mkdir ($saveDir,0777,true);
             } catch (\Throwable $th) {
-                $saveDir = base_path() . DIRECTORY_SEPARATOR . 'public' . DIRECTORY_SEPARATOR . '24fa_img' . DIRECTORY_SEPARATOR . '失败';
+                $saveDir = base_path() . DIRECTORY_SEPARATOR . 'public' . DIRECTORY_SEPARATOR . '24fa_img'  . DIRECTORY_SEPARATOR . date("Y-m-d") . DIRECTORY_SEPARATOR . '失败';
             }
         }
         $fileName = $fileName . '.png';
@@ -296,7 +296,7 @@ class FaController extends CommonController{
         $file = fopen($path,'w');
         fwrite($file,$data);
         fclose($file);
-        $savePath = 'public' . DIRECTORY_SEPARATOR . '24fa_img' . DIRECTORY_SEPARATOR . $dirName . DIRECTORY_SEPARATOR .$fileName;
+        $savePath = 'public' . DIRECTORY_SEPARATOR . '24fa_img' . DIRECTORY_SEPARATOR . date("Y-m-d") . DIRECTORY_SEPARATOR . $dirName . DIRECTORY_SEPARATOR .$fileName;
         // return $path;
         // echo '接收文件'.$fileName;
         return $savePath;

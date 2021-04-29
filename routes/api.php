@@ -85,5 +85,7 @@ Route::namespace('Api')->group(function () {
     Route::get('/imgs/list', 'ImgsController@imgsList');
 
     Route::get('/imgs/info', 'ImgsController@imgsInfo');
+
+    Route::get('/tiny/img', 'TinyController@img');
 });
 

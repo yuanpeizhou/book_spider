@@ -48,7 +48,7 @@ class BookScanController extends CommonController{
      */
     protected $chapterList = [];
 
-    protected $start = 19;
+    protected $start = 21928;
 
     protected $pageSize = 20;
 

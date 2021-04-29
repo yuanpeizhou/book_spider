@@ -44,6 +44,8 @@ class WordController {
     }
 
     public function handle(){
+        ini_set('memory_limit', '1024M');
+        
         $condition[] = ['img_is_scan' , '=' , 0];
 
         $condition[] = ['is_spider' , '=' , 1];
@@ -63,6 +65,7 @@ class WordController {
         $is_end = false;
 
         while(!$is_end){
+            
             $chapter_list = $this->chapter_model->where($condition)->get();
 
             if($chapter_list->isEmpty()){
@@ -170,13 +173,14 @@ class WordController {
 
             if($img_data && $this->checkRes($img_data)){
                 $local_url = $this->saveImg($file_name,$img_data);
+                $temp['local_url'] = $local_url;
+                $temp['md5'] = $this->getFileMd5($temp['local_url']);
                 echo "图片" . $file_name . "以保存\r\n";
             }else{
                 $is_all_img = false;
+                $temp['local_url'] = null;
+                $temp['md5'] = null;
             }
-
-            $temp['local_url'] = $local_url;
-            $temp['md5'] = $this->getFileMd5($temp['local_url']);
 
             /**对比md5查看是否已入库 */
             $file_word = $this->word_model->where('md5',$temp['md5'])->whereNotNull('word')->first();

@@ -120,7 +120,7 @@ class YankongController{
                         continue;
                     }
 
-                    $imgsUrl = str_replace('pic5','pic1',$imgsUrl);
+                    $imgsUrl = str_replace('pic5','pic4',$imgsUrl);
 
                     $imgFile = $this->httpRequest($imgsUrl);
 
@@ -277,12 +277,12 @@ class YankongController{
 
     /*保存图片*/
     public function saveImg($dirName,$data = null,$fileName){
-        $saveDir =  base_path() . DIRECTORY_SEPARATOR . 'public' . DIRECTORY_SEPARATOR . 'yan_img' . DIRECTORY_SEPARATOR . $dirName;
+        $saveDir =  base_path() . DIRECTORY_SEPARATOR . 'public' . DIRECTORY_SEPARATOR . 'yan_img' . DIRECTORY_SEPARATOR . date("Y-m-d") . DIRECTORY_SEPARATOR . $dirName;
         if(!is_dir($saveDir)){
             try {
                 mkdir ($saveDir,0777,true);
             } catch (\Throwable $th) {
-                $saveDir = base_path() . DIRECTORY_SEPARATOR . 'public' . DIRECTORY_SEPARATOR . 'yan_img' . DIRECTORY_SEPARATOR . '失败';
+                $saveDir = base_path() . DIRECTORY_SEPARATOR . 'public' . DIRECTORY_SEPARATOR . 'yan_img' . DIRECTORY_SEPARATOR . date("Y-m-d") . DIRECTORY_SEPARATOR . '失败';
             }
         }
         $fileName = $fileName . '.png';
@@ -291,7 +291,7 @@ class YankongController{
         $file = fopen($path,'w');
         fwrite($file,$data);
         fclose($file);
-        $savePath = 'public' . DIRECTORY_SEPARATOR . 'yan_img' . DIRECTORY_SEPARATOR . $dirName . DIRECTORY_SEPARATOR .$fileName;
+        $savePath = 'public' . DIRECTORY_SEPARATOR . 'yan_img' . DIRECTORY_SEPARATOR . date("Y-m-d") . DIRECTORY_SEPARATOR . $dirName . DIRECTORY_SEPARATOR .$fileName;
         // return $path;
         // echo '接收文件'.$fileName;
         return $savePath;
@@ -313,7 +313,7 @@ class YankongController{
 
         if(!$res){
             echo "页面请求失败，延时3秒尝试第三次请求\r\n";
-            sleep(30);
+            sleep(10);
             $res = $this->httpGet($url);
         }
 

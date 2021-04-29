@@ -182,6 +182,9 @@ class BookController extends CommonController{
      */
     public function handleBook(){
 
+        set_time_limit(0);
+        ini_set('memory_limit', '1024M');
+
         $id = request()->id;
 
         if(!$id){
@@ -202,6 +205,17 @@ class BookController extends CommonController{
         $chapterList = $chapterModel->where('book_id',$id)->get();
         
         foreach ($chapterList as $key => $value) {
+            // if(!$value->content){
+            //     $source_content = $this->getChapterContent($value->source_content);
+            
+            //     $content = '';
+            //     foreach ($source_content[0] as $source_key => $source_value) {
+            //         $content = $content . $this->handleSourceContent($source_value);
+            //     }
+    
+            //     $value->content = $content;
+            //     $value->save();
+            // }
 
             $source_content = $this->getChapterContent($value->source_content);
             

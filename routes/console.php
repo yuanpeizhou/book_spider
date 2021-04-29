@@ -125,3 +125,9 @@ Artisan::command('yanspider', function () {
     $obj = New \App\Http\Controllers\Spider\YankongController();
     $obj->spider();
 })->describe('spider yan source');
+
+/**图片压缩 */
+Artisan::command('tinyimg', function () {
+    $obj = New \App\Http\Controllers\Api\TinyController();
+    $obj->img();
+})->describe('handle img');
