@@ -143,6 +143,9 @@ class BookController extends CommonController{
      * 书籍导出
      */
     public function bookExport(){
+        // var_dump('123');
+        set_time_limit(0);
+        ini_set('memory_limit', '2048M');
 
         $id = request()->id;
 

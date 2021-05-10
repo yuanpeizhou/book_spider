@@ -17,13 +17,6 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->describe('Display an inspiring quote');
 
-
-Artisan::command('imgHandle', function () {
-    $word = New \App\Http\Controllers\Spider\WordController();
-    $word->handle();
-    // $this->info("Building {$tag}!");
-})->describe('扫描出图片资源');
-
 Artisan::command('book {file_name} {url}', function ($file_name,$url) {
     $book = New \App\Http\Controllers\Api\SpiderController($file_name,$url);
     $book->handleBook();
@@ -38,25 +31,29 @@ Artisan::command('bookscan  {file_name} {url}', function ($file_name,$url) {
 Artisan::command('libscan', function () {
     $lib = New \App\Http\Controllers\Api\LibScanController();
     $lib->scan();
-})->describe('scan lib');
+})->describe('扫描书籍目录');
 
 /**2 */
 Artisan::command('bookChapterScan', function () {
     $book = New \App\Http\Controllers\Api\BookScanController();
     $book->chapterNumScan();
-})->describe('bookChapterScan');
+})->describe('扫描章节目录');
 
+/**3 */
 Artisan::command('bookChapterHandle {start} {end}', function ($start , $end) {
     $chapter = New \App\Http\Controllers\Api\ChapterScanController();
     $chapter->scan($start,$end);
-})->describe('bookChapterScan');
+})->describe('爬取章节内容');
 
-Artisan::command('test', function () {
-    $chapter = New \App\Http\Controllers\Api\JwtController();
-    $chapter->index();
-})->describe('123');
+/**4 */
+Artisan::command('imgHandle', function () {
+    $word = New \App\Http\Controllers\Spider\WordController();
+    $word->handle();
+    // $this->info("Building {$tag}!");
+})->describe('扫描出图片资源');
 
-/**检查所有书籍爬取结果 */
+
+/**6 */
 Artisan::command('bookCheck', function () {
     $check = New \App\Http\Controllers\Api\BookCheckController();
     $check->checkBookComplex();
@@ -106,7 +103,6 @@ Artisan::command('fascan', function () {
     $obj = New \App\Http\Controllers\Api\FaController();
     $obj->scan();
 })->describe('scan fa source');
-
 
 /**24fa资源爬取 */
 Artisan::command('faspider', function () {
