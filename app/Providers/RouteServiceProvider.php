@@ -43,7 +43,7 @@ class RouteServiceProvider extends ServiceProvider
 
         $this->mapSpiderRoutes();
 
-        //
+        $this->mapBlogRoutes();
     }
 
     /**
@@ -103,5 +103,14 @@ class RouteServiceProvider extends ServiceProvider
             // ->middleware('api')
             ->namespace($this->namespace)
             ->group(base_path('routes/spider.php'));
+    }
+
+    /**
+     * 定义博客的路由
+     */
+    protected function mapBlogRoutes(){
+        Route::prefix('blog')
+            ->namespace($this->namespace)
+            ->group(base_path('routes/blog.php'));
     }
 }
