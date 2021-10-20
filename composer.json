@@ -12,7 +12,8 @@
         "lcobucci/jwt": "^3.3",
         "tencentcloud/tencentcloud-sdk-php": "^3.0",
         "thiagoalessio/tesseract_ocr": "^2.10",
-        "tinify/tinify": "^1.5"
+        "tinify/tinify": "^1.5",
+      "ext-json": "*"
     },
     "require-dev": {
         "filp/whoops": "~2.0",

@@ -2,10 +2,12 @@
 
 namespace App\Http\Requests;
 
-use App\Exceptions\ParamErrorException;
+use App\Exceptions\ParamsErrorException;
 use Illuminate\Foundation\Http\FormRequest;
-
+use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
+use stdClass;
+
 
 /**
  * 重写FormRequest类，实现验证场景
@@ -23,13 +25,13 @@ class AbstractRequest extends FormRequest
 
     public $extendRules;
 
-    public function authorize()
+    public function authorize():bool
     {
         return true;
     }
 
     /**兼容资源控制器,加载id */
-    public function validationData()
+    public function validationData(): array
     {
         $data = parent::validationData();
 
@@ -43,7 +45,7 @@ class AbstractRequest extends FormRequest
      * @param $scene
      * @return $this
      */
-    public function scene($scene)
+    public function scene($scene): AbstractRequest
     {
         $this->currentScene = $scene;
         return $this;
@@ -54,7 +56,7 @@ class AbstractRequest extends FormRequest
      * @param string $name
      * @return AbstractRequest
      */
-    public function with($name = '')
+    public function with(string $name = ''): AbstractRequest
     {
         if (is_array($name)) {
             $this->extendRules = array_merge($this->extendRules[], array_map(function ($v) {
@@ -70,7 +72,7 @@ class AbstractRequest extends FormRequest
     /**
      * 覆盖自动验证方法
      */
-    public function validateResolved()
+    public function validate($scene = '')
     {
         if ($this->autoValidate) {
             $this->handleValidate();
@@ -78,12 +80,11 @@ class AbstractRequest extends FormRequest
     }
 
     /**
-     * 验证方法
+     * 手动验证
      * @param string $scene
-     * @throws \Illuminate\Auth\Access\AuthorizationException
-     * @throws \Illuminate\Validation\ValidationException
+     * @return array
      */
-    public function validate($scene = '')
+    public function check(string $scene = ''): array
     {
         if ($scene) {
             $this->currentScene = $scene;
@@ -140,31 +141,34 @@ class AbstractRequest extends FormRequest
 
     /**
      * 最终验证方法
-     * @throws \Illuminate\Auth\Access\AuthorizationException
-     * @throws \Illuminate\Validation\ValidationException
      */
-    protected function handleValidate()
+    protected function handleValidate():array
     {
         if (!$this->passesAuthorization()) {
-
             $this->failedAuthorization();
         }
 
         $instance = $this->getValidatorInstance();
 
         if ($instance->fails()) {
-            throw new ParamErrorException($instance->errors()->all()[0]);
+            throw new ParamsErrorException($instance->errors()->all()[0]);
         }
 
-        $requestData = $instance->validated();
+        $results = [];
+        $missingValue = new stdClass();
+        foreach (array_keys($this->getRules()) as $key) {
+            $value = data_get($this->validationData(), $key, $missingValue);
 
-        $returnData = [];
+            if ($value !== $missingValue) {
+                Arr::set($results, $key, $value);
+            }
+        }
 
         /**驼峰转蛇形 */
-        foreach ($requestData as $key => $value) {
-            $returnData[Str::snake($key)] = $value;
+        foreach ($results as $key => $value) {
+            $results[Str::snake($key)] = $value;
         }
 
-        return $returnData;
+        return $results;
     }
 }

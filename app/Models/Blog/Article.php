@@ -3,22 +3,20 @@ namespace App\Models\Blog;
 
 use App\Models\BaseModel;
 use App\User;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * 博客文章model
  */
 class Article extends BaseModel{
 
-    /**通过反射方式获取常量 */
-    static function getConstants() {
-        $oClass = new \ReflectionClass(__CLASS__);
-        return $oClass->getConstants();
-    }
+    const TABLE = 'articles';
 
-    protected $table = 'articles';
+    public $table = 'articles';
 
     //关联作者
-    public function user(){
+    public function user(): BelongsTo
+    {
         return $this->belongsTo(User::class);
     }
 

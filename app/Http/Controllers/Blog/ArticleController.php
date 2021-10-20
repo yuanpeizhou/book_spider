@@ -1,11 +1,14 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Blog;
 
+use App\Http\Controllers\Controller;
 use App\Http\Requests\ArticleRequest;
 use App\Models\Blog\Article;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
-class PositionLevelController extends Controller
+class ArticleController extends Controller
 {
     protected $articleModel;
 
@@ -15,45 +18,66 @@ class PositionLevelController extends Controller
     }
 
     /**
-     * 等级列表
-     * @param int $page 当前页码，不传默认为1
-     * @param int $limit 分页大小，不传默认为10
-     * @param string $type 获取数据模式 all 获取全部数据 page 分页获取数据 
-     * @param string $keyword 搜索关键词(文章名称)
-     * @param int $tagIds 标签
-     * @return \Illuminate\Http\Response
+     * 列表
+     * @param ArticleRequest $request
+     * @return JsonResponse
+     * @throws null
      */
-    public function index(ArticleRequest $request)
+    public function index(Request $request):JsonResponse
     {
-        $limit = $request->limit;
-        $keyword = $request->keyword;
-        $type = $request->type ? $request->type : 'page';
+        $limit = $request->input('limit',10);
+        $keyword = $request->input('keyword');
+        $type = $request->input('type','page');
 
-        $res = $this->articleModel->select('id','title','cover','content','user_id','created_at');
+        $query = $this->articleModel->query()
+            ->select('id','title','cover','content','user_id','created_at')
+            ->with('user:id,name');
 
         if($keyword){
-            $res = $res->where('title','like',"%$keyword%");
+            $query->where('title','like',"%$keyword%");
         }
 
         if($type == 'all'){
-            $res = $res->get();
+            $articles = $query->get();
         }else{
-            $res = $res->paginate($limit);
+            $articles = $query->paginate($limit);
         }
 
-        return $this->returnApi(200, '查询成功',$res);
+        foreach ($articles as $key => $article){
+
+            $articles[$key]->username = $article->user ? $article->user->name : null;
+
+            unset($articles[$key]->user);
+        }
+
+        return $this->returnApi(200, '查询成功',$articles);
+    }
+
+    /**
+     * 详情
+     * @param ArticleRequest $request
+     * @param int $id 文章id
+     * @return JsonResponse
+     * @throws null
+     */
+    public function show(ArticleRequest $request,int $id): JsonResponse
+    {
+        $request->scene('info')->validate();
+
+        $article = $this->articleModel->query()->find($id);
+
+        return $this->returnApi(200, '查询成功',$article);
     }
 
     /**
      * 新增
-     * @param string $title 文章名称
-     * @param string $cover 文章封面
-     * @param text $content 文章内容
-     * @return \Illuminate\Http\Response
+     * @param ArticleRequest $request
+     * @return JsonResponse
+     * @throws null
      */
-    public function store(ArticleRequest $request)
+    public function store(ArticleRequest $request):JsonResponse
     {
-        $data = $request->scene('insert')->with('insert')->validate();
+        $data = $request->scene('insert')->with('insert')->check();
 
         $this->articleModel->fill($data);
         $res = $this->articleModel->save();
@@ -66,33 +90,20 @@ class PositionLevelController extends Controller
     }
 
     /**
-     * 详情
-     * @param int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function show(ArticleRequest $request,$id)
-    {
-        $request->scene('info')->validate();
-
-        $positionLevel = $this->positionLevelModel->find($id);
-
-        return $this->returnApi(200, '查询成功',$positionLevel);
-    }
-
-    /**
      * 更新
-     * @param int $id
-     * @param string $title 等级名称
-     * @return \Illuminate\Http\Response
+     * @param ArticleRequest $request
+     * @param int $id 文章id
+     * @return JsonResponse
+     * @throws null
      */
-    public function update(ArticleRequest $request, $id)
+    public function update(ArticleRequest $request,int $id): JsonResponse
     {
-        $data = $request->scene('update')->with('update')->validate();
+        $data = $request->scene('update')->with('update')->check();
 
-        $positonLevel = $this->positionLevelModel->find($id);
+        $article = $this->articleModel->query()->find($id);
 
-        $positonLevel->fill($data);
-        $res = $positonLevel->save();
+        $article->fill($data);
+        $res = $article->save();
 
         if ($res === false) {
             return $this->returnApi(202, '编辑失败,请稍后再试');
@@ -103,16 +114,18 @@ class PositionLevelController extends Controller
 
     /**
      * 删除
-     * @param int $id
-     * @return \Illuminate\Http\Response
+     * @param ArticleRequest $request
+     * @param int $id 文章id
+     * @return JsonResponse
+     * @throws null
      */
-    public function destroy(ArticleRequest $request, $id)
+    public function destroy(ArticleRequest $request,int $id):JsonResponse
     {
         $request->scene('delete')->validate();
 
-        $res = $this->positionLevelModel->destroy($id);
+        $res = $this->articleModel->destroy($id);
 
-        if ($res === false) {
+        if ($res == false) {
             return $this->returnApi(202, '删除失败,请稍后再试');
         }
 
