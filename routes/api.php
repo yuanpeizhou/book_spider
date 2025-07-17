@@ -28,6 +28,8 @@ Route::namespace('Api')->group(function () {
 
     Route::get('/book/info', 'BookController@bookInfo');
 
+    Route::get('/chapter/info', 'BookController@chapterInfo');
+
     Route::post('/book/handleBook', 'BookController@handleBook');
 
     Route::post('/book/handleChapter', 'BookController@handleChapter');

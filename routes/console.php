@@ -1,6 +1,12 @@
 <?php
 
+use App\Http\Controllers\Spider\ImgController;
+use App\Http\Controllers\Spider\RoseController;
+use App\Models\BookModel;
+use App\Models\ChapterModel;
 use Illuminate\Foundation\Inspiring;
+use GuzzleHttp\Client;
+use GuzzleHttp\RequestOptions;
 
 /*
 |--------------------------------------------------------------------------
@@ -17,40 +23,52 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->describe('Display an inspiring quote');
 
-Artisan::command('book {file_name} {url}', function ($file_name,$url) {
-    $book = New \App\Http\Controllers\Api\SpiderController($file_name,$url);
-    $book->handleBook();
-})->describe('spider book');
+Artisan::command('book {website_id}', function ($website_id) {
+    $book = New \App\Http\Controllers\Spider\BookController();
+    $book->handle($website_id);
+})->describe('扫描书籍');
 
-Artisan::command('bookscan  {file_name} {url}', function ($file_name,$url) {
-    $book = New \App\Http\Controllers\Api\BookScanController($file_name,$url);
-    $book->scan();
-})->describe('scan book');
-
-/**1 */
-Artisan::command('libscan', function () {
-    $lib = New \App\Http\Controllers\Api\LibScanController();
-    $lib->scan();
-})->describe('扫描书籍目录');
-
-/**2 */
-Artisan::command('bookChapterScan', function () {
-    $book = New \App\Http\Controllers\Api\BookScanController();
-    $book->chapterNumScan();
+Artisan::command('chapter_list {website_id}', function ($website_id) {
+    $chapterList = New \App\Http\Controllers\Spider\ChapterListController();
+    $chapterList->handle($website_id);
 })->describe('扫描章节目录');
 
-/**3 */
-Artisan::command('bookChapterHandle {start} {end}', function ($start , $end) {
-    $chapter = New \App\Http\Controllers\Api\ChapterScanController();
-    $chapter->scan($start,$end);
+Artisan::command('chapter_content {website_id}', function ($website_id) {
+    $chapter = New \App\Http\Controllers\Spider\ChapterContentController();
+    $chapter->handle($website_id);
 })->describe('爬取章节内容');
 
 /**4 */
 Artisan::command('imgHandle', function () {
-    $word = New \App\Http\Controllers\Spider\WordController();
+    $word = New \App\Http\Controllers\Api\WordController();
     $word->handle();
     // $this->info("Building {$tag}!");
 })->describe('扫描出图片资源');
+
+Artisan::command('imgHandle2', function () {
+    $word = New \App\Http\Controllers\Api\WordController();
+    $word->handle2();
+    // $this->info("Building {$tag}!");
+})->describe('扫描出图片资源');
+
+Artisan::command('rosescan {website_id}', function ($website_id) {
+    $rose = New RoseController();
+    $rose->handle($website_id);
+    // $this->info("Building {$tag}!");
+})->describe('扫描出图片资源');
+
+Artisan::command('imgscan {website_id}', function ($website_id) {
+    $rose = New ImgController();
+    $rose->handle($website_id);
+    // $this->info("Building {$tag}!");
+})->describe('扫描出图片资源');
+
+Artisan::command('roseImgHandle {website_id}', function ($website_id) {
+    $rose = New ImgController();
+    $rose->saveImg($website_id);
+})->describe('扫描出图片资源');
+
+
 
 
 /**6 */
@@ -126,4 +144,21 @@ Artisan::command('yanspider', function () {
 Artisan::command('tinyimg', function () {
     $obj = New \App\Http\Controllers\Api\TinyController();
     $obj->img();
+})->describe('handle img');
+
+Artisan::command('zhou_test', function () {
+    $bookModel = New BookModel();
+    $books = $bookModel->pluck('website_id', 'id');
+
+    $chapterModel = New ChapterModel();
+    $handle = true;
+    $i = 1;
+    while ($handle) {
+        $chapters = $chapterModel->whereNull('website_id')->orderBy('id')->limit(1000)->get();
+        foreach ($chapters as $chapter) {
+            $chapterModel->where('id', $chapter->id)->update(["website_id" => $books[$chapter->book_id]]);
+        }
+        echo $i . "\r\n";
+        $i++;
+    }
 })->describe('handle img');

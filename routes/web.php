@@ -12,6 +12,7 @@ use thiagoalessio\TesseractOCR\TesseractOCR;
 */
 
 Route::get('/', function () {
+    // echo phpinfo();exit;
     return view('welcome');
 });
 

@@ -12,5 +12,5 @@ yarn-error.log
 .env
 
 /public/set_img
-/public/aotuba_img
-/public/24fa_img
+/public/word/
+/public/xchina/
