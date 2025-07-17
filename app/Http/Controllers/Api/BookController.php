@@ -1,6 +1,8 @@
 <?php
 
 namespace App\Http\Controllers\Api;
+
+use App\Models\ChapterModel;
 use Illuminate\Support\Facades\DB;
 
 class BookController extends CommonController{
@@ -15,8 +17,8 @@ class BookController extends CommonController{
     {
         $this->bookModel = New \App\Models\BookModel(); 
         
-        $webModel = New \App\Models\WebsiteModel();
-        $this->originUrl =  $webModel->find(1)->url;
+        // $webModel = New \App\Models\WebsiteModel();
+        // $this->originUrl =  $webModel->find(1)->url;
     }
 
     /**
@@ -25,42 +27,71 @@ class BookController extends CommonController{
     public function bookList(){
         $page = request()->page ? intval(request()->page) : 1;
         $limit = request()->limit ? intval(request()->limit) : 10;
-        $book_name = request()->book_name;
-        $author_name = request()->author_name;
+        $website_id = request()->website_id ? intval(request()->website_id) : 1;
+        $keyword = request()->keyword;
 
-        $condition[] = ['id','>',0];
+        $query = $this->bookModel;
 
-        if($book_name){
-            $condition[] = ['book_name','like',"%$book_name%"];
+        if($keyword){
+            $query = $query->where(function($query) use ($keyword) {
+                $query->where('book_name','like',"%$keyword%")
+                    ->orWhere('author_name','like',"%$keyword%");
+            });
         }
-
-        if($author_name){
-            $condition[] = ['author_name','like',"%$author_name%"];
+        if ($website_id) {
+            $query = $query->where('website_id', '=', $website_id);
         }
+        // ->orderBy("last_update_date", "desc")
+        $res = $query->orderBy("id")->paginate($limit);
 
-        $res = $this->bookModel->where($condition)->paginate($limit);
-
-        foreach ($res as $key => $value) {
-            $res[$key]->url = $this->originUrl . $value->url;
-        }
+        // foreach ($res as $key => $value) {
+        //     $res[$key]->url = $this->originUrl . $value->url;
+        // }
         return $this->returnApi(200,'ok',$res);
     }
 
-    public function bookInfo(){
-        $chapterModel = New \App\Models\ChapterModel();
-
+    public function bookInfo(ChapterModel $chapterModel){
         $page = request()->page ? intval(request()->page) : 1;
         $limit = request()->limit ? intval(request()->limit) : 10;
         $id = request()->id;
         $keyword = request()->keyword;
 
-        $condition[] = ['book_id','=',$id];
-
+        $query = $chapterModel->select("id","chapter_name")->where('book_id',  '=',$id);
         if($keyword){
-            $condition[] = ['source_content','like',"%$keyword%"];
+            $query = $query->where('source_content','like',"%$keyword%");
+        }
+        $res = $query->orderBy('id')->paginate($limit);
+        return $this->returnApi(200,'ok',$res);
+    }
+
+    public function chapterInfo(ChapterModel $chapterModel) {
+        $id = request()->id;
+        $res = $chapterModel->where('id',  '=',$id)->first();
+
+        // 检索上一章
+        $last = $chapterModel->where("book_id", '=', $res->book_id)
+            ->where('chapter_order',  '=',$res->chapter_order - 1)->first();
+
+        // 检索下一章
+        $next = $chapterModel->where("book_id", '=', $res->book_id)
+            ->where('chapter_order',  '=',$res->chapter_order + 1)->first();
+
+        $res->next_id = 0;
+        if ($next) {
+            $res->next_id = $next->id;
         }
 
-        $res = $chapterModel->where($condition)->orderBy('chapter_order')->paginate($limit);
+        $res->last_id = 0;
+        if ($last) {
+            $res->last_id = $last->id;
+        }
+
+        
+        $res->content = str_replace("\t\t\t\t", "", $res->content);
+        $res->content = str_replace("    　　", "　　", $res->content);
+        $res->content = str_replace("\r\n\r\n", "\r\n", $res->content);
+        $res->content = str_replace("&nsp;", "", $res->content);
+        $res->content = str_replace("&nbsp;&nbsp;&nbsp;&nbsp;", "\r\n", $res->content);
 
         return $this->returnApi(200,'ok',$res);
     }

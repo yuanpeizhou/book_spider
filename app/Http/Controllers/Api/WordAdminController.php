@@ -41,7 +41,9 @@ class WordAdminController extends CommonController
 
         foreach ($res as $key => $value) {
             $res[$key]->origin_url = $this->originUrl . $value->origin_url;
-            $res[$key]->local_url = $this->localUrl . $value->local_url;
+            $tempArray = explode('/',$value['img']);
+            $fileName = array_pop($tempArray);
+            $res[$key]->local_url = "http://127.0.0.1:9999/word/" . $fileName;
         }
 
         return $this->returnApi(200,'ok',$res->toArray());

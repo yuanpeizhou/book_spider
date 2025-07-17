@@ -2,8 +2,17 @@
 
 namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
+use PhpParser\Node\Expr\Cast\String_;
+use Illuminate\Support\Facades\Log;
+use PhpParser\Node\Expr\Throw_;
+
+require __DIR__.'/../../../Lib/SimpleHtmlDom.php';
 
 class CommonController extends Controller{
+
+    protected $test = null;
+
+    protected $currentDom = null;
 
     public function __construct()
     {
@@ -11,35 +20,36 @@ class CommonController extends Controller{
     }
 
     /**
-     * api返回数据
+     * 抓取网页
+     * @param mixed $url
+     * @param mixed $encode
+     * @param mixed $isZip
      */
-    public function returnApi($code = 200 , $msg = 'ok', $data = null){
-        $data = [
-            'code' => $code,
-            'msg' => $msg,
-            'data' => $data
-        ];
-        return json_encode($data,JSON_UNESCAPED_UNICODE);
-    }
+    public function getPageData($url, $website, $code = true){
+        $config = ['http' => $website->http];
+        if (count($website->header) > 0) {
+            $config['header'] =  $website->header;
+        }
 
-    /**
-     * 获取页面信息
-     * @param url string 网页地址
-     */
-    public function getPageData($url,$encode = true,$isZip = false){
         $lib = New \App\Lib\Common();
-        $res = $lib->getData($url,false,false,false,$isZip);
+        $res = $lib->getData($url,$config);
 
         if(!$res){
             echo "页面请求失败，延时30秒尝试第二次请求\r\n";
             sleep(30);
-            $res = $lib->getData($url,false,false,false,$isZip);
+            $res = $lib->getData($url,$config);
         }
 
         if(!$res){
             echo "页面请求失败，延时60秒尝试第三次请求\r\n";
             sleep(60);
-            $res = $lib->getData($url,false,false,false,$isZip);
+            $res = $lib->getData($url,$config);
+        }
+
+        if(!$res){
+            echo "页面请求失败，延时300秒尝试第四次请求\r\n";
+            sleep(300);
+            $res = $lib->getData($url,$config);
         }
 
         if(!$res){
@@ -47,50 +57,18 @@ class CommonController extends Controller{
             return false;
         }
 
-        $code = mb_detect_encoding($res, array('GB2312','UTF-8', 'GBK'));
+        // 自适应编码
+        if (!$code) {
+            return $res;
+        }
 
+        $code = mb_detect_encoding($res, array('GB2312','UTF-8', 'GBK'));
         if($code == 'EUC-CN' || $code == 'CP936'){
             $res = mb_convert_encoding($res, 'utf-8', 'gbk');
         }
-        
-        /**废弃 */
-        // if($encode && $this->utf8_gb2312($res) == 'gb2312'){
-        //     $res = mb_convert_encoding($res, 'utf-8', 'gbk');
-        // }
         return $res;
     }
 
-    /**
-     * 页面章节信息
-     * @param str string 目录页面
-     */
-    public function getChapterList($str){
-        $regex ="/<ul .*?>.*?<\/ul>/ism"; 
-        if(preg_match_all($regex, $str, $matches)){
-            // return isset($matches[0]) ? $matches[0][1] : '';
-            $regex2 ="/<a href=\"(.*?)\".*?>.*?<\/a>/i";
-            preg_match_all($regex2, $matches[0][1], $matches2);
-            return $matches2[1];
-        }else{
-            return '';
-        }
-    }
-
-    /**
-     * 获取目录最后的分页
-     * @param str string 首页信息
-     */
-    public function getDirLastPage($str){
-        $regex ="/<a class=\"endPage\" href=\"(.*?)\".*?>.*?<\/a>/i";
-        if(preg_match_all($regex, $str, $matches)){
-            $pageArray = explode('/',$matches[1][0]);
-            $pageArray2 = explode('_',$pageArray[2]);
-
-            return $pageArray2[1];
-        }else{
-            return '';
-        }
-    }
 
     /*获取页面内容*/
     public function getContent($str,$type = 'single'){
@@ -135,104 +113,6 @@ class CommonController extends Controller{
             $pageArray = explode('_',$last);
             $pageArray2 = explode('.',$pageArray[1]);
             return $pageArray2[0];
-        }else{
-            return '';
-        }
-    }
-
-    /**
-     * 从书库页面中摘取书籍内容块
-     */
-    public function getLibContent($str){
-        $regex ="/<ul>.*?<\/ul>/ism"; 
-        if(preg_match_all($regex, $str, $matches)){
-
-            $regex2 ='/<div class=\"right\">.*?<\/div>/ism';
-
-            preg_match_all($regex2, $matches[0][0], $matches2);
-
-            return $matches2[0];
-        }else{
-            return [];
-        }
-    }
-
-    /**解析书籍内容 */
-    public function getBookInfo($str){
-        $regexBookName = "/<a class=\"name\" href=\"(.*?)\">(.*?)<\/a>/i";
-        $regexAuthorName = "/<a href=\"(.*?)\"?\s.*?>(.*?)<\/a>/i";
-        $regex2 = "/<font style=\"color:red\">(.*?)<\/font>/";
-        $regex3 = "/<span class=\"words\">字数：(.*?)<\/span>/";
-        $regex5 = "/<p class=\"info\">?.*\s更新：(.*?)<\/p>/ism";
-
-
-        preg_match_all($regexBookName, $str, $matches);
-
-        preg_match_all($regexAuthorName, $str, $matches2);
-
-        preg_match_all($regex2, $str, $matches3);
-
-        preg_match_all($regex3, $str, $matches4);
-
-
-        if(!isset($matches[1][0])){
-            echo "数据读取错误1";
-            dd($matches);
-        }
-
-        if(!isset($matches[2][0])){
-            echo "数据读取错误2";
-            dd($matches);
-        }
-
-        if(!isset($matches2[2][0])){
-            echo "数据读取错误3";
-            var_dump($str);
-            dd($matches2);
-        }
-
-        if(!isset($matches3[1][0])){
-            preg_match_all($regex5, $str, $matches3);
-
-            if(!isset($matches3[1][0])){
-                echo "数据读取错误4";
-                var_dump($str);
-                dd($matches3);
-            }
-        }
-
-        if(!isset($matches4[1][0])){
-            echo "数据读取错误5";
-            dd($matches4);
-        }
-
-        return [
-            'book_name' => $matches[2][0] , 
-            'book_url' => $matches[1][0]  , 
-            'author_name' => $matches2[2][0] ,  
-            'last_update_date' => $matches3[1][0] , 
-            'boook_words' => $matches4[1][0]
-        ];
-    }
-
-    /**
-     * 获取书库最后的分页
-     * @param str string 首页信息
-     */
-    public function getLibLastPage($str){
-        $regex ="/<a class=\"endPage\" href=\"(.*?)\".*?>.*?<\/a>/i";
-        if(preg_match_all($regex, $str, $matches)){
-
-            $array = explode('.',$matches[1][0]);
-
-            $array1 = explode('-',$array[0]);
-
-            $lastPage = array_pop($array1);
-
-            $shuKuUrl = implode('-',$array1);
-
-            return ['shuKuUrl' =>  $shuKuUrl , 'lastPage' => $lastPage];
-
         }else{
             return '';
         }
@@ -285,6 +165,347 @@ class CommonController extends Controller{
         }
 
         return $default;
+    }
+
+    // 重构
+
+    /**
+     * 根据规则解析数据
+     * @param mixed $pageData 带解析的页面
+     * @param mixed $rules 解析规则
+     * @return array
+     */
+    public function parseRule(string $pageData, array $rules = []) {
+        $this->test = $pageData;
+        $pageDom = str_get_html($pageData);
+
+        $data = [];
+        foreach($rules as $rule) {
+            $dom = $pageDom;
+            $singleData = [];
+            foreach($rule['rule_list'] as $singleRule) {
+                $this->handleSingleRule($singleData, $dom, $singleRule);
+            }
+            $data[$rule['tag']] = $singleData;
+        }
+
+        // 多个字段默认拼装，单个字段直接返回
+        if (count($data) > 1) {
+            $res = $this->arrOneToTwo($data);
+        } else {
+            $res = array_shift($data);
+        }
+
+        return $res;
+    }
+
+    /**
+     * 处理单条规则
+     */
+    private function handleSingleRule(&$singleData, &$dom, $rule) {
+        // 没指定元素就返回整个dom
+        if ($rule['ele'] === null) {
+            array_push($singleData, $dom->{$rule['atr']});
+            return;
+        }
+
+        // 指定取第几个元素
+        if (isset($rule["idx"])) {
+            $eleList = $dom->find($rule['ele'], $rule["idx"]);
+
+            // 查找失败了尝试拿第一个
+            if (!isset($eleList->innertext)) {
+                $eleList = $dom->find($rule['ele'], 0);
+            }
+        } else {
+            $eleList = $dom->find($rule['ele']);
+        }
+
+        // remove时有可能是没有这个元素的
+        if (isset($rule["idx"]) && !isset($eleList->innertext) && $rule['atr'] != "remove") {
+            // $this->saveHtml($this->test);
+            throw new \Exception("解析失败: 找不到指定元素. " . json_encode($rule), 501);
+        }
+        
+        if (is_array($eleList) && count($eleList) == 0) {
+            // $this->saveHtml($this->test);
+            throw new \Exception("解析失败: 找不到指定元素. " . json_encode($rule), 501);
+        }
+
+        // 多步取值直接重置dom并返回
+        if ($rule['atr'] == 'dom') {
+            $dom = $eleList;
+            return;
+        }
+
+        if ($rule['atr'] == "remove") {
+            $dom->removeChild($eleList);
+            return;
+        }
+
+        if (isset($rule["idx"])) {
+            $singleData = $eleList->{$rule['atr']};
+            return;
+        }
+    
+        // 遍历取出目标属性
+        foreach ($eleList as $ele) {
+            if (!isset($ele->{$rule['atr']})) {
+                throw new \Exception("解析失败: 对应属性不存在. " . json_encode($rule), 502);
+            }
+            array_push($singleData, $ele->{$rule['atr']});
+        }
+
+        // 处理替换
+        if (isset($rule['replace'])) {
+            foreach ($singleData as $key => $value) {
+                $replace_param = explode('|', $rule['replace']);
+                $singleData[$key] = str_replace($replace_param[0], $replace_param[1], $value);
+            }
+        }
+    }
+
+
+    /**
+     * 把带下标的一维数组合成二维数组
+     * @param mixed $arr
+     * @return array
+     */
+    public function arrOneToTwo($arr)
+    {
+        // [
+        //     "book_name" => ["1","2", "3"],
+        //     "book_author" => ['111','222','333']
+        // ];
+        // array(3) {
+        // [0]=>
+        // array(2) {
+        //     ["book_name"]=>
+        //     string(1) "1"
+        //     ["book_author"]=>
+        //     string(3) "111"
+        // }
+        // [1]=>
+        // array(2) {
+        //     ["book_name"]=>
+        //     string(1) "2"
+        //     ["book_author"]=>
+        //     string(3) "222"
+        // }
+        // [2]=>
+        // array(2) {
+        //     ["book_name"]=>
+        //     string(1) "3"
+        //     ["book_author"]=>
+        //     string(3) "333"
+        // }
+        // }
+
+        // 获取键
+        $key_arr = array_keys($arr);
+
+        // 获取长度
+        $arr_length = 0;
+        foreach ($arr as $key => $value) {
+            if (count($value) > $arr_length) {
+                $arr_length = count($value);
+            }
+        }
+
+        // 循环赋值
+        $res = [];
+        for ($i=0; $i < $arr_length; $i++) { 
+            $temp = [];
+            foreach ($key_arr as $value) {
+                $temp[$value] = $arr[$value][$i] ?? null;
+            }
+            $res[] = $temp;
+        }
+        return $res;
+    }
+
+    public function saveHtml($str) {
+        $savePath = 'storage' . DIRECTORY_SEPARATOR . 'html.log';
+        $path = base_path() . DIRECTORY_SEPARATOR . $savePath;
+
+        file_put_contents($path, date("Y-m-d H:i:s") . "\r\n", FILE_APPEND);
+        file_put_contents($path, $str, FILE_APPEND);
+    }
+
+    /**
+     * 控制页面抓取时间间隔
+     * @param mixed $webiste
+     * @return void
+     */
+    public function sleepTime($webiste) {
+        $time = isset($webiste->rule['spider_time']) ? $webiste->rule['spider_time'] : 0;
+        echo "等待" . $time . "秒\r\n";
+        sleep($time);
+    }
+
+
+    //     private function handleSingleRule(&$singleData, &$dom, $rule) {
+    //     // 没指定元素就返回整个dom
+    //     if ($rule['ele'] === null) {
+    //         array_push($singleData, $dom->{$rule['atr']});
+    //         return;
+    //     }
+
+    //     // 指定取第几个元素
+    //     if (isset($rule["idx"])) {
+    //         $eleList = $dom->find($rule['ele'], $rule["idx"]);
+
+    //         // 查找失败了尝试拿第一个
+    //         if (!isset($eleList->innertext)) {
+    //             $eleList = $dom->find($rule['ele'], 0);
+    //         }
+    //     } else {
+    //         $eleList = $dom->find($rule['ele']);
+    //     }
+
+    //     // remove时有可能是没有这个元素的
+    //     if (isset($rule["idx"]) && !isset($eleList->innertext) && $rule['atr'] != "remove") {
+    //         // $this->saveHtml($this->test);
+    //         throw new \Exception("解析失败: 找不到指定元素. " . json_encode($rule), 501);
+    //     }
+        
+    //     if (is_array($eleList) && count($eleList) == 0) {
+    //         // $this->saveHtml($this->test);
+    //         throw new \Exception("解析失败: 找不到指定元素. " . json_encode($rule), 501);
+    //     }
+
+    //     // 多步取值直接重置dom并返回
+    //     if ($rule['atr'] == 'dom') {
+    //         $dom = $eleList;
+    //         return;
+    //     }
+
+    //     if ($rule['atr'] == "remove") {
+    //         $dom->removeChild($eleList);
+    //         return;
+    //     }
+
+    //     if (isset($rule["idx"])) {
+    //         $singleData = $eleList->{$rule['atr']};
+    //         return;
+    //     }
+    
+    //     // 遍历取出目标属性
+    //     foreach ($eleList as $ele) {
+    //         if (!isset($ele->{$rule['atr']})) {
+    //             throw new \Exception("解析失败: 对应属性不存在. " . json_encode($rule), 502);
+    //         }
+    //         array_push($singleData, $ele->{$rule['atr']});
+    //     }
+
+    //     // 处理替换
+    //     if (isset($rule['replace'])) {
+    //         foreach ($singleData as $key => $value) {
+    //             $replace_param = explode('|', $rule['replace']);
+    //             $singleData[$key] = str_replace($replace_param[0], $replace_param[1], $value);
+    //         }
+    //     }
+    // }
+
+    // 查找并处理单个元素
+    public function findElement($dom, $rule) {
+        $res = '';
+        // 指定取第几个元素
+        if (isset($rule["idx"])) {
+            $domRes = $dom->find($rule['ele'], $rule["idx"]);
+
+            // 查找失败了尝试拿第一个
+            if (!isset($domRes->innertext)) {
+                $domRes = $dom->find($rule['ele'], 0);
+            }
+
+            // 如果还是败了直接报错
+            if (!isset($domRes->innertext)) {
+                throw new \Exception("解析失败: 指定属性的索引不存在. " . json_encode($rule), 502);
+            }
+        }
+
+        // 直接返回dom用于下一步处理
+        if ($rule['atr'] == "dom") {
+            $this->currentDom = $domRes;
+            return null;
+        }
+
+        // 移除某些子元素   
+        if ($rule['atr'] == "remove") {
+            $this->currentDom->removeChild($domRes);
+            return null;
+        }
+
+        $res = $domRes->{$rule['atr']};
+        
+        // 处理替换
+        if (isset($rule['replace'])) {
+            $replace_param = explode('|', $rule['replace']);
+            $res = str_replace($replace_param[0], $replace_param[1], $res);
+        }
+
+        return $res;
+    }
+
+    // 查找复数的元素
+    public function findElements($dom, $rule) {
+        $domRes = $dom->find($rule['ele']);
+
+        // 直接返回dom用于下一步处理
+        if ($rule['atr'] == "dom") {
+            $this->currentDom = $domRes;
+            return [];
+        }
+        
+        $res = [];
+        foreach ($domRes as $key => $value) {
+            $res[] = $value->{$rule['atr']};
+        }
+        return $res;
+    }
+
+    // 解析规则第二版(只支持一层循环处理)
+    public function parseRuleV2($pageData, $rules) {
+        $pageDom = str_get_html($pageData);
+
+        $data = [];
+        foreach($rules as $rule) {
+            // 重置目标dom
+            $this->currentDom = $pageDom;
+            foreach($rule['rule_list'] as $singleRule) {
+                $data[$rule['tag']] = $this->handleSingleRuleV2($singleRule);
+            }
+        }
+
+        // 多个字段默认拼装，单个字段直接返回
+        if (count($data) > 1) {
+            $res = $this->arrOneToTwo($data);
+        } else {
+            $res = array_shift($data);
+        }
+        return $res;
+    }
+
+    // type 1取复数元素属性或者dom 2取单个元素属性或者dom  3循环dom取单个元素属性(先不支持嵌套)
+    public function handleSingleRuleV2($rule) {
+        $res = [];
+
+        if ($rule['type'] == 1) {
+            $res = $this->findElements($this->currentDom, $rule);
+        }
+
+        if ($rule['type'] == 2) {
+            $this->currentDom = $this->findElement($this->currentDom, $rule);
+        }
+
+        if ($rule['type'] == 3) {
+            $res = [];
+            foreach ($this->currentDom as $domItem) {
+                $res[] = $this->findElement($domItem, $rule);
+            }
+        }
+        return $res;
     }
 }
 

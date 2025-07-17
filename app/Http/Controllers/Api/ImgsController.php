@@ -2,9 +2,13 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Models\RoseModel;
+
 class ImgsController extends CommonController{
 
-    public $bookModel;
+    public $imgModel;
+
+    protected $roseModel;
 
     public $originUrl;
 
@@ -12,10 +16,10 @@ class ImgsController extends CommonController{
 
     public function __construct()
     {
-        $this->model = New \App\Models\FaImgModel(); 
-        
+        $this->roseModel = New RoseModel();
+        $this->imgModel = New \App\Models\ImgModel(); 
         $webModel = New \App\Models\WebsiteModel();
-        $this->originUrl =  $webModel->find(1)->url;
+        $this->originUrl =  $webModel->find(3)->url;
     }
 
     /**
@@ -26,33 +30,24 @@ class ImgsController extends CommonController{
         $limit = request()->limit ? intval(request()->limit) : 10;
         $keyword = request()->keyword;
 
-        $imgs_model = New \App\Models\FaImgsModel();
-
-
-        $condition[] = ['is_spider','=',1];
-
+        $condition = [];
         if($keyword){
-            $condition[] = ['name','like',"%$keyword%"];
+            $condition[] = ['rose_name','like',"%$keyword%"];
         }
 
 
-        $res = $this->model->select('id','name','index','number')->where($condition)->paginate($limit);
+        $res = $this->roseModel->select('id','rose_name','model_name','count')->where($condition)->paginate($limit);
 
         foreach ($res as $key => $value) {
-            $res[$key]->img_list = $imgs_model->select('local_url')->where('img_id',$value['id'])->orderBy('order')->limit(3)->get();
+            $res[$key]->img_list = $this->imgModel->select('img_local_url')->where('rose_id',$value['id'])->orderBy('img_order')->limit(3)->get();
         }
 
         return $this->returnApi(200,'ok',$res);
     }
 
     public function imgsInfo(){
-        $imgs_model = New \App\Models\FaImgsModel();
-
         $id = request()->id;
-
-
-        $res = $imgs_model->where('img_id',$id)->orderBy('order','desc')->get();
-
+        $res = $this->imgModel->where('rose_id',$id)->orderBy('img_order')->get();
         return $this->returnApi(200,'ok',$res);
     }
 }
