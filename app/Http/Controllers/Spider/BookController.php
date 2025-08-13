@@ -43,7 +43,8 @@ class BookController extends CommonController{
         $pageData = $this->getPageData($this->bookRule['url'], $this->website);
         switch ($this->bookRule['page_model']) {
             case 'all':
-                $this->spiderPageByAll($this->website, $pageData, $this->bookRule['page_rule'], [$this, 'handleBook']);
+                $pageStart = isset($this->bookRule['page_start']) ? $this->bookRule['page_start'] : 1;
+                $this->spiderPageByAll($this->website, $pageData, $this->bookRule['page_rule'], $pageStart,[$this, 'handleBook']);
                 break;
             case 'next':
                 $this->spiderPageByNext($this->website, $pageData, $this->bookRule['page_rule'], [$this, 'handleBook']);
@@ -107,5 +108,42 @@ class BookController extends CommonController{
                 echo "书籍《" . $book->book_name . "》无更新，略过\r\n";
             }
         }
+    }
+
+    public function zhou_test() {
+        $book_id = 113072;
+        while(true) {
+            $bookList = $this->bookModel
+                ->where('website_id', '=', 2)
+                ->where('id', '>', $book_id)->orderBy('id')->limit(500)->get();
+
+            if (count($bookList) == 0) {
+                echo "所有书籍都扫描完毕\r\n";exit;
+            }
+
+            foreach($bookList as $book) {
+                echo "开始扫描书籍《" . $book->book_name . "》\r\n";
+
+                $needHandle = false;
+                $chapterList = $this->chapterModel->where('book_id', '=', $book->id)->where('is_spider', '=', 1)->get();
+                foreach ($chapterList as $chapter) {
+                    if (strlen($chapter->content) < 500) {
+                        echo "章节: " . $book->id . "|" . $chapter->id . "|" . $chapter->chapter_name . "需要重新爬取\r\n";
+
+                        $chapter->is_spider = 0;
+                        $chapter->is_scan_img = 1;
+                        $chapter->save();
+                        $needHandle = true;
+                    }
+                }
+
+                if ($needHandle) {
+                    $book->is_update = 3;
+                    $book->save();
+                }
+                $book_id = $book->id;
+            }
+        }
+        
     }
 }

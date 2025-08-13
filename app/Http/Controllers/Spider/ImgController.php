@@ -73,7 +73,8 @@ class ImgController extends CommonController {
                 // 根据扫描模式执行不同的策略
                 switch ($this->imgRule['page_model']) {
                     case 'all':
-                        $this->spiderPageByAll($this->website, $pageData, $this->imgRule['page_rule'], [$this, 'handleImg']);
+                        $pageStart = isset($this->imgRule['page_start']) ? $this->imgRule['page_start'] : 1;
+                        $this->spiderPageByAll($this->website, $pageData, $this->imgRule['page_rule'], $pageStart,[$this, 'handleImg']);
                         break;
                     case 'next':
                         $this->spiderPageByNext($this->website, $pageData, $this->imgRule['page_rule'], [$this, 'handleImg']);
@@ -100,6 +101,11 @@ class ImgController extends CommonController {
 
     public function saveImgList($imgList) {
         foreach ($imgList as $imgUrl) {
+            // 洗一下链接
+            if (strpos($imgUrl, "')") !== false) {
+                $imgUrl = explode("')", $imgUrl)[0];
+            }
+            
             $this->currentOrder++;
             $img = $this->imgModel->where("rose_id", '=', $this->rose->id)
                 ->where("img_web_url", "=", $imgUrl)->first();
@@ -127,13 +133,19 @@ class ImgController extends CommonController {
         }
 
         while(true) {
-            $imgList = $this->imgModel->where("is_spider", 1)->limit(500)->get();
+            $imgList = $this->imgModel->where('website_id', $websiteId)->where("is_spider", 1)->limit(500)->get();
             if (count($imgList) == 0) {
                 echo "所有图片都已爬取完毕\r\n";break;
             }
 
             foreach ($imgList as $key => $img) {
-                $res = $this->getPageData($img->img_web_url, $this->website, true);
+                if (strpos($img->img_web_url, "http") === false) {
+                    $url = $this->website->url . $img->img_web_url;
+                } else {
+                    $url = $img->img_web_url;
+                }
+                
+                $res = $this->getPageData($url, $this->website);
                 $localPath = $this->saveImgToLocal($img, $res);
                 $imgData = [
                     "img_local_url" => $localPath,
@@ -148,7 +160,7 @@ class ImgController extends CommonController {
     public function saveImgToLocal($img, $data) {
         $temp_array = explode('/', $img->img_web_url);
         $fileName = array_pop($temp_array);
-        $filePath = base_path() . DIRECTORY_SEPARATOR . 'public' . DIRECTORY_SEPARATOR . $this->website->dir . DIRECTORY_SEPARATOR . $img->rose_id . DIRECTORY_SEPARATOR . $fileName;
+        $filePath = base_path() . DIRECTORY_SEPARATOR . 'public' . DIRECTORY_SEPARATOR . $this->website->config['dir'] . DIRECTORY_SEPARATOR . $img->rose_id . DIRECTORY_SEPARATOR . $fileName;
 
         $dir = dirname($filePath); 
         if (!is_dir($dir)) {  

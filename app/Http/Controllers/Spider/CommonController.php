@@ -7,21 +7,24 @@ use App\Models\WebsiteModel;
 require __DIR__.'/../../../Lib/SimpleHtmlDom.php';
 
 class CommonController extends Controller{
+    // 当前选中的dom元素
     protected $currentDom = null;
-    protected $spiderConfig = [
-        "retry" => [
-            [
-                "sleep_time" => 30,
-                "message" => "页面请求失败，延时30秒尝试第二次请求\r\n"
-            ],
-            [
-                "sleep_time" => 60,
-                "message" => "页面请求失败，延时60秒尝试第三次请求\r\n"                
-            ],
-            [
-                "sleep_time" => 300,
-                "message" => "页面请求失败，延时300秒尝试第四次请求\r\n"                
-            ]
+
+    // 爬取页面重试次数
+    protected $retry = 3;
+    // 重试对应的配置
+    protected $retryConfig = [
+        [
+            "sleep_time" => 10,
+            "message" => "页面请求失败，延时10秒尝试第二次请求\r\n"
+        ],
+        [
+            "sleep_time" => 60,
+            "message" => "页面请求失败，延时60秒尝试第三次请求\r\n"                
+        ],
+        [
+            "sleep_time" => 180,
+            "message" => "页面请求失败，延时180秒尝试第四次请求\r\n"                
         ]
     ];
 
@@ -32,45 +35,52 @@ class CommonController extends Controller{
      * @param mixed $code
      * @param mixed $repeat
      */
-    public function getPageData($url, $website, $referer = false, $code = true, $repeat = 3){
+    public function getPageData($url, $website){
         // 加载网站的配置
-        $config = ['http' => $website->http, 'referer' => $referer];
-        if (count($website->header) > 0) {
-            $config['header'] =  $website->header;
+        $requestConfig = $website->config;
+
+        // 如果自定义了重试规则，就用配置的
+        if (isset($requestConfig['retry'])) {
+            $this->retry = $requestConfig['retry'];
+            $this->retryConfig = $requestConfig['retry_config'];
         }
 
-        $handle = true;
         $res = null;
         $count = 0;
-        while($handle) {
-            if ($count >= $repeat) {
+        while(true) {
+            if ($count >= $this->retry) {
                 echo "页面请求失败,跳过该页面\r\n";
                 break;
             }
 
             $lib = New \App\Lib\Common();
-            $res = $lib->getData($url,$config);
+            $res = $lib->getData($url,$requestConfig);
 
             // 抓取成功，直接跳出循环
-            if ($res) {
+            if ($res['res']) {
                 break;
             }
-            $this->saveHtml($res);
-            echo $this->spiderConfig["retry"][$count]['message'];
-            sleep($this->spiderConfig["retry"][$count]['sleep_time']);
+
+            $this->saveHtml($res['data']);
+            if (!isset($this->retryConfig[$count])) {
+                echo $this->retryConfig[0]['message'];
+                sleep($this->retryConfig[0]['sleep_time']);
+            } else {
+                echo $this->retryConfig[$count]['message'];
+                sleep($this->retryConfig[$count]['sleep_time']);
+            }
             $count++;
         }
 
-        // 自适应编码
-        if (!$code) {
-            return $res;
+        // 自动解码
+        if (isset($requestConfig['decode']) && $requestConfig['decode']) {
+            $code = mb_detect_encoding($res['data'], array('GB2312','UTF-8', 'GBK'));
+            if($code == 'EUC-CN' || $code == 'CP936'){
+                $res['data'] = mb_convert_encoding($res['data'], 'utf-8', 'gbk');
+            }
         }
 
-        $code = mb_detect_encoding($res, array('GB2312','UTF-8', 'GBK'));
-        if($code == 'EUC-CN' || $code == 'CP936'){
-            $res = mb_convert_encoding($res, 'utf-8', 'gbk');
-        }
-        return $res;
+        return $res['data'];
     }
 
     /**
@@ -125,6 +135,7 @@ class CommonController extends Controller{
 
         // 如果还是败了直接报错
         if (!isset($domRes->innertext)) {
+            var_dump($dom->innertext);
             throw new \Exception("解析失败: 指定属性的索引不存在. " . json_encode($rule), 502);
         }
 
@@ -138,8 +149,13 @@ class CommonController extends Controller{
         
         // 处理替换
         if (isset($rule['replace'])) {
-            $replace_param = explode('|', $rule['replace']);
-            $res = str_replace($replace_param[0], $replace_param[1], $res);
+            if (!is_array($rule['replace'])) {
+                $rule['replace'] = [$rule['replace']];
+            }
+            foreach ($rule['replace'] as $value) {
+                $replace_param = explode('|', $value);
+                $res = str_replace($replace_param[0], $replace_param[1], $res);
+            }
         }
 
         return $res;
@@ -162,12 +178,17 @@ class CommonController extends Controller{
         
         $res = [];
         foreach ($domRes as $key => $value) {
+            
             $target = $value->{$rule['atr']};
-
             // 处理替换
             if (isset($rule['replace'])) {
-                $replace_param = explode('|', $rule['replace']);
-                $target = str_replace($replace_param[0], $replace_param[1], $target);
+                if (!is_array($rule['replace'])) {
+                    $rule['replace'] = [$rule['replace']];
+                }
+                foreach ($rule['replace'] as $value) {
+                    $replace_param = explode('|', $value);
+                    $target = str_replace($replace_param[0], $replace_param[1], $target);
+                }
             }
             $res[] = $target;
         }
@@ -204,7 +225,7 @@ class CommonController extends Controller{
     }
 
     /**
-     * 处理单条规则 type 1取复数元素属性或者dom 2取单个元素属性或者dom  3循环dom取单个元素属性或dom(不支持嵌套)
+     * 处理单条规则 type 1取复数元素属性或者dom 2取单个元素属性或者dom  3循环dom取单个元素属性或dom(不支持嵌套) 4过滤出想要的要素
      * @param mixed $rule
      * @return array
      */
@@ -223,6 +244,17 @@ class CommonController extends Controller{
             foreach ($this->currentDom as $domItem) {
                 $res[] = $this->findElement($domItem, $rule);
             }
+        }
+
+        if ($rule['type'] == 4) {
+            $tmep = [];
+            foreach ($this->currentDom as $domItem) {
+                $resStr = $this->findElement($domItem, $rule);
+                if ($resStr == $rule['filter']) {
+                    $tmep[] = $domItem;
+                }
+            }
+            $this->currentDom = $tmep;
         }
         return $res;
     }
@@ -337,7 +369,7 @@ class CommonController extends Controller{
      * @param callable $function 回调函数
      * @return void
      */
-    public function spiderPageByAll($website, string $pageData, array $pageRule, callable $function) {
+    public function spiderPageByAll($website, string $pageData, array $pageRule, $pageStart, callable $function) {
         // 先把本页内容爬取了
         call_user_func($function, $pageData);
 
@@ -347,7 +379,7 @@ class CommonController extends Controller{
 
         foreach ($pageList as $key => $value) {
             // 默认跳过第一个页面,因为上面已经处理了
-            if ($key == 0) {
+            if ($key < $pageStart) {
                 continue;
             }
 
@@ -358,6 +390,14 @@ class CommonController extends Controller{
         }
     }
 
+    /**
+     * 获取下一页分页
+     * @param mixed $website
+     * @param string $pageData
+     * @param array $pageRule
+     * @param callable $function
+     * @return void
+     */
     public function spiderPageByNext($website, string $pageData, array $pageRule, callable $function) {
         $currentPage = null;
         while (true) {

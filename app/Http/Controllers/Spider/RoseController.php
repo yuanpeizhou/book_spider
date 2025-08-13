@@ -37,7 +37,8 @@ class RoseController extends CommonController {
         $pageData = $this->getPageData($this->website->url . $this->roseRule['url'], $this->website);
         switch ($this->roseRule['page_model']) {
             case 'all':
-                $this->spiderPageByAll($this->website, $pageData, $this->roseRule['page_rule'], [$this, 'handleRose']);
+                $pageStart = isset($this->roseRule['page_start']) ? $this->roseRule['page_start'] : 1;
+                $this->spiderPageByAll($this->website, $pageData, $this->roseRule['page_rule'], $pageStart,[$this, 'handleRose']);
                 break;
             case 'next':
                 $this->spiderPageByNext($this->website, $pageData, $this->roseRule['page_rule'], [$this, 'handleRose']);
@@ -47,20 +48,6 @@ class RoseController extends CommonController {
         }
 
         echo "爬取完毕\r\n";
-
-        
-        switch ($this->roseRule['page_model']) {
-            case 'all':
-                $this->handle1();
-                break;
-
-            case 'next':
-                $this->handle2();
-                break;
-            
-            default:
-                die("未知的处理页面方式，请检查配置");
-        }
     }
 
     public function handleRose($pageData) {
@@ -84,8 +71,9 @@ class RoseController extends CommonController {
             $this->roseModel->insert($roseData);
             echo "套图《" .  $roseData['rose_name'] . "》入库完毕\r\n";
         } else {
-            echo "套图《" . $roseData['rose_name'] . "》已在库中，停止爬取\r\n";
-            exit;
+            // echo "套图《" . $roseData['rose_name'] . "》已在库中，停止爬取\r\n";
+            // exit;
+            echo "套图《" . $roseData['rose_name'] . "》已在库中，跳过\r\n";
         }
     }
 }

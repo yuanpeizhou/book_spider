@@ -33,9 +33,9 @@ Artisan::command('chapter_list {website_id}', function ($website_id) {
     $chapterList->handle($website_id);
 })->describe('扫描章节目录');
 
-Artisan::command('chapter_content {website_id}', function ($website_id) {
+Artisan::command('chapter_content {website_id} {book_id}', function ($website_id, $book_id) {
     $chapter = New \App\Http\Controllers\Spider\ChapterContentController();
-    $chapter->handle($website_id);
+    $chapter->handle($website_id, $book_id);
 })->describe('爬取章节内容');
 
 /**4 */
@@ -51,23 +51,44 @@ Artisan::command('imgHandle2', function () {
     // $this->info("Building {$tag}!");
 })->describe('扫描出图片资源');
 
-Artisan::command('rosescan {website_id}', function ($website_id) {
+Artisan::command('rose {website_id}', function ($website_id) {
     $rose = New RoseController();
     $rose->handle($website_id);
     // $this->info("Building {$tag}!");
 })->describe('扫描出图片资源');
 
-Artisan::command('imgscan {website_id}', function ($website_id) {
+Artisan::command('img {website_id}', function ($website_id) {
     $rose = New ImgController();
     $rose->handle($website_id);
     // $this->info("Building {$tag}!");
 })->describe('扫描出图片资源');
 
-Artisan::command('roseImgHandle {website_id}', function ($website_id) {
+Artisan::command('img_save {website_id}', function ($website_id) {
     $rose = New ImgController();
     $rose->saveImg($website_id);
 })->describe('扫描出图片资源');
 
+Artisan::command('video {website_id}', function ($website_id) {
+    $video = New \App\Http\Controllers\Spider\VideoController();
+    $video->handle($website_id);
+})->describe('爬取视频');
+
+
+Artisan::command('svideo {website_id}', function ($website_id) {
+    $video = New \App\Http\Controllers\Spider\VideoController();
+    $video->handle1($website_id);
+})->describe('爬取视频');
+
+Artisan::command('cvideo {website_id}', function ($website_id) {
+    $video = New \App\Http\Controllers\Spider\VideoController();
+    $video->handle2($website_id);
+})->describe('抓取封面');
+
+
+Artisan::command('zhou_test', function () {
+    $book = New \App\Http\Controllers\Spider\BookController();
+    $book->zhou_test();
+})->describe('测试');
 
 
 
@@ -144,21 +165,4 @@ Artisan::command('yanspider', function () {
 Artisan::command('tinyimg', function () {
     $obj = New \App\Http\Controllers\Api\TinyController();
     $obj->img();
-})->describe('handle img');
-
-Artisan::command('zhou_test', function () {
-    $bookModel = New BookModel();
-    $books = $bookModel->pluck('website_id', 'id');
-
-    $chapterModel = New ChapterModel();
-    $handle = true;
-    $i = 1;
-    while ($handle) {
-        $chapters = $chapterModel->whereNull('website_id')->orderBy('id')->limit(1000)->get();
-        foreach ($chapters as $chapter) {
-            $chapterModel->where('id', $chapter->id)->update(["website_id" => $books[$chapter->book_id]]);
-        }
-        echo $i . "\r\n";
-        $i++;
-    }
 })->describe('handle img');

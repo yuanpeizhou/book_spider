@@ -49,6 +49,7 @@ class WordController {
         $condition[] = ['img_is_scan' , '=' , 0];
 
         $condition[] = ['is_spider' , '=' , 1];
+        $condition[] = ['book_id' , '=' , 92089];
 
         if($this->book_start){
             $condition[] = ['book_id','>=',$this->book_start];

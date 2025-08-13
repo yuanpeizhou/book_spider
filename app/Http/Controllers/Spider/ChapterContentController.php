@@ -24,15 +24,16 @@ class ChapterContentController extends CommonController{
         ini_set('memory_limit', '1024M');
     }
 
-    public function handle($websiteId) {
+    public function handle($websiteId, $start = 0) {
         $this->website = $this->websiteModel->find($websiteId);
         if (!$this->website) {
             throw new \Exception("无效的网站id");
         }
         $this->chapterContentRule = $this->website->rule['chapter_content'];
 
-
-        $start = $this->getFirstBook();
+        if ($start == 0) {
+            $start = $this->getFirstBook();
+        }
         if ($start == 0 ) {
             echo "没有需要爬取的章节\r\n";exit;
         }
@@ -40,9 +41,9 @@ class ChapterContentController extends CommonController{
         while(true) {
             $bookList = $this->bookModel
                 ->where('website_id', $this->website->id)
-                // ->where("is_update", '=', BookModel::WAIT_SIPDER)
-                ->whereNull("chapter_order")
+                ->where("is_update", '=', BookModel::WAIT_SIPDER)
                 ->where('id', ">=", $start)
+                ->orderBy('id')
                 ->limit(100)->get();
             if(count($bookList) == 0) {
                 echo "所有书籍都已爬取完毕\r\n";
@@ -71,7 +72,8 @@ class ChapterContentController extends CommonController{
                     // 根据扫描模式执行不同的策略
                     switch ($this->chapterContentRule['page_model']) {
                         case "all":
-                            $this->spiderPageByAll($this->website, $pageData, $this->chapterContentRule['page_rule'], [$this, 'handleChapter']);
+                            $pageStart = isset($this->chapterContentRule['page_start']) ? $this->chapterContentRule['page_start'] : 1;
+                            $this->spiderPageByAll($this->website, $pageData, $this->chapterContentRule['page_rule'], $pageStart,[$this, 'handleChapter']);
                             break;
                         case "next":
                             $this->spiderPageByNext($this->website, $pageData, $this->chapterContentRule['page_rule'], [$this, 'handleChapter']);
@@ -103,14 +105,14 @@ class ChapterContentController extends CommonController{
 
     public function handleChapter($pageData) {
         $chapterContent = $this->parseRule($pageData, $this->chapterContentRule['content_rule']);
+        
         $this->currentChapter = $this->currentChapter.$chapterContent;
     }
 
     // 获取需要爬取的第一章id
     public function getFirstBook() {
         $firstBook = $this->bookModel->where("website_id", '=', $this->website->id)
-            // ->where("is_update", "=", BookModel::WAIT_SIPDER)
-            ->whereNull("chapter_order")
+            ->where("is_update", "=", BookModel::WAIT_SIPDER)
             ->first();
         if (!$firstBook) {
             return 0;

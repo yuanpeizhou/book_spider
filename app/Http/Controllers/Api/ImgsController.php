@@ -28,11 +28,16 @@ class ImgsController extends CommonController{
     public function imgsList(){
         $page = request()->page ? intval(request()->page) : 1;
         $limit = request()->limit ? intval(request()->limit) : 10;
+        $websiteId = request()->website_id ? intval(request()->website_id) : null;
         $keyword = request()->keyword;
 
         $condition = [];
         if($keyword){
             $condition[] = ['rose_name','like',"%$keyword%"];
+        }
+
+        if ($websiteId) {
+            $condition[] = ['website_id', '=', $websiteId];
         }
 
 
@@ -47,7 +52,13 @@ class ImgsController extends CommonController{
 
     public function imgsInfo(){
         $id = request()->id;
-        $res = $this->imgModel->where('rose_id',$id)->orderBy('img_order')->get();
+        $rose = $this->roseModel->where('id', '=', $id)->first();
+        $img_list = $this->imgModel->where('rose_id',$id)->orderBy('img_order')->get();
+
+        $res = [
+            "rose_name" => $rose->rose_name,
+            "img_list" => $img_list
+        ];
         return $this->returnApi(200,'ok',$res);
     }
 }

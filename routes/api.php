@@ -22,6 +22,8 @@ Route::namespace('Api')->group(function () {
         return '123';
     });
 
+    Route::post('/collect', 'CollectController@collect');
+
     Route::get('/word/md5', 'WordController@md5');
 
     Route::get('/book/list', 'BookController@bookList');
@@ -29,6 +31,8 @@ Route::namespace('Api')->group(function () {
     Route::get('/book/info', 'BookController@bookInfo');
 
     Route::get('/chapter/info', 'BookController@chapterInfo');
+
+    Route::get('/video/list', 'VideoController@cvideoList');
 
     Route::post('/book/handleBook', 'BookController@handleBook');
 

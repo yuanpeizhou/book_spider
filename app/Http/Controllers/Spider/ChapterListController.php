@@ -62,7 +62,8 @@ class ChapterListController extends CommonController{
                 // 根据扫描模式执行不同的策略
                 switch ($this->chapterRule['page_model']) {
                     case "all":
-                        $this->spiderPageByAll($this->website, $pageData, $this->chapterRule['page_rule'], [$this, 'handleChapter']);
+                        $pageStart = isset($this->chapterRule['page_start']) ? $this->chapterRule['page_start'] : 1;
+                        $this->spiderPageByAll($this->website, $pageData, $this->chapterRule['page_rule'], $pageStart, [$this, 'handleChapter']);
                         break;
                     case "next":
                         $this->spiderPageByNext($this->website, $pageData, $this->chapterRule['page_rule'], [$this, 'handleChapter']);
@@ -131,7 +132,7 @@ class ChapterListController extends CommonController{
                 "created_at" => date("Y-m-d H:i:s")
             ]);
             $this->chapterModel->insert($chapterData);
-            echo "章节：" . $chapterData["chapter_name"] . "录入成功\r\n"; 
+            echo "章节：" . $chapterData["chapter_name"] . "录入成功\r\n";
         }
     }
 
